@@ -1,0 +1,68 @@
+PERFORMANCE COUNTERS PRE-FLIGHT
+
+sd write: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+navigator: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+mc_att_control: 29071 events, 0 overruns, 1922124us elapsed, 66us avg, min 15us max 842us 15.970us rms
+sd drop: 0 events
+mavlink_txe: 2 events
+mavlink_el: 10559 events, 0 overruns, 771158us elapsed, 73us avg, min 38us max 1163us 95.028us rms
+mavlink_txe: 2 events
+mavlink_el: 11604 events, 0 overruns, 954487us elapsed, 82us avg, min 48us max 1502us 96.686us rms
+io latency: 29059 events, 0 overruns, 17261184us elapsed, 594us avg, min 412us max 3463us 73.533us rms
+io write: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+io update: 29109 events, 0 overruns, 19080939us elapsed, 655us avg, min 258us max 46952us 824.294us rms
+io_txns: 57849 events, 0 overruns, 17828063us elapsed, 308us avg, min 131us max 2259us 99.014us rms
+sensors: 29386 events, 0 overruns, 1926911us elapsed, 65us avg, min 32us max 17900us 110.514us rms
+lsm303d_acc_dupe: 17481 events
+lsm303d_bad_val: 0 events
+lsm303d_bad_reg: 0 events
+lsm303d_mag_read: 11818 events, 0 overruns, 286249us elapsed, 24us avg, min 23us max 25us 0.415us rms
+lsm303d_acc_read: 112554 events, 0 overruns, 3412755us elapsed, 30us avg, min 20us max 36us 4.459us rms
+l3gd20_dupe: 77399 events
+l3gd20_bad_reg: 0 events
+l3gd20_err: 0 events
+l3gd20_read: 165294 events, 0 overruns, 4655445us elapsed, 28us avg, min 21us max 37us 5.929us rms
+mpu6k_duplicates: 29870 events
+mpu6k_reset: 0 events
+mpu6k_good_trans: 118013 events
+mpu6k_bad_reg: 0 events
+mpu6k_bad_trans: 0 events
+mpu6k_read: 147921 events, 0 overruns, 7368309us elapsed, 49us avg, min 30us max 70us 11.689us rms
+mpu6k_gyro_read: 0 events
+mpu6k_acc_read: 1 events
+ctrl_latency: 29125 events, 0 overruns, 14508645us elapsed, 498us avg, min 352us max 2544us 53.655us rms
+adc_samples: 118260 events, 0 overruns, 299537us elapsed, 2us avg, min 2us max 3us 0.499us rms
+ms5611_buf_of: 8096 events
+ms5611_com_err: 0 events
+ms5611_measure: 10801 events, 0 overruns, 104353us elapsed, 9us avg, min 6us max 734us 31.635us rms
+ms5611_read: 10801 events, 0 overruns, 989219us elapsed, 91us avg, min 11us max 1899us 100.377us rms
+dma_alloc: 7 events
+
+LOAD PRE-FLIGHT
+
+Processes: 21 total, 2 running, 19 sleeping
+CPU usage: 28.66% tasks, 1.00% sched, 70.34% idle
+Uptime: 120.954s total, 88.335s idle
+
+ PID COMMAND                   CPU(ms) CPU(%)  USED/STACK PRIO(BASE) STATE 
+   0 Idle Task                   88335 70.340     0/    0   0 (  0)  READY 
+   1 hpwork                       3211  2.738   820/ 1592 192 (192)  w:sig 
+   2 lpwork                        597  0.334   572/ 1592  50 ( 50)  READY 
+   3 init                         1642  0.000  1420/ 2496 100 (100)  w:sem 
+ 242 sdlog2_writer                  31  2.070  1140/ 2040  95 ( 95)  w:sem 
+  90 gps                           273  0.200   732/ 1192 220 (220)  w:sem 
+  92 dataman                        22  0.000   652/ 1192  90 ( 90)  w:sem 
+ 118 sensors                      3090  2.404  1668/ 1992 250 (250)  w:sem 
+ 120 commander                    2716  2.204  3196/ 3592 140 (140)  READY 
+ 121 commander_low_prio            334  0.000   772/ 2992  50 ( 50)  w:sem 
+ 126 px4io                        3969  3.273   856/ 1392 240 (240)  w:sem 
+ 136 mavlink_if0                  1127  2.070  2340/ 2792 100 (100)  READY 
+ 137 mavlink_rcv_if0                 9  0.000   828/ 2096 175 (175)  w:sem 
+ 144 mavlink_if1                   904  0.734  2340/ 2792 100 (100)  READY 
+ 145 mavlink_rcv_if1                 9  0.000   828/ 2096 175 (175)  w:sem 
+ 179 sdlog2                       1276  1.937  3028/ 3392 177 (177)  RUN   
+ 213 attitude_estimator_q         5841  4.876  2012/ 2496 250 (250)  w:sem 
+ 219 position_estimator_inav      3140  2.672  4932/ 5296 250 (250)  w:sem 
+ 229 mc_att_control               2864  2.404  1316/ 1496 250 (250)  w:sem 
+ 231 mc_pos_control                906  0.734  1228/ 1896 250 (250)  w:sem 
+ 238 navigator                       7  0.000   796/ 1496 105 (105)  w:sem 

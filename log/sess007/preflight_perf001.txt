@@ -1,0 +1,68 @@
+PERFORMANCE COUNTERS PRE-FLIGHT
+
+sd write: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+navigator: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+mc_att_control: 3631 events, 0 overruns, 231700us elapsed, 63us avg, min 15us max 915us 22.055us rms
+sd drop: 0 events
+mavlink_txe: 2 events
+mavlink_el: 1390 events, 0 overruns, 97849us elapsed, 70us avg, min 38us max 1412us 93.179us rms
+mavlink_txe: 3 events
+mavlink_el: 1438 events, 0 overruns, 117455us elapsed, 81us avg, min 48us max 872us 86.358us rms
+io latency: 3618 events, 0 overruns, 2083631us elapsed, 575us avg, min 412us max 1565us 82.497us rms
+io write: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+io update: 3667 events, 0 overruns, 2548979us elapsed, 695us avg, min 258us max 48702us 1331.228us rms
+io_txns: 7568 events, 0 overruns, 2339747us elapsed, 309us avg, min 131us max 2315us 104.617us rms
+sensors: 3942 events, 0 overruns, 273964us elapsed, 69us avg, min 33us max 17819us 285.185us rms
+lsm303d_acc_dupe: 2378 events
+lsm303d_bad_val: 0 events
+lsm303d_bad_reg: 0 events
+lsm303d_mag_read: 1596 events, 0 overruns, 38834us elapsed, 24us avg, min 23us max 25us 0.472us rms
+lsm303d_acc_read: 15198 events, 0 overruns, 460694us elapsed, 30us avg, min 20us max 36us 4.477us rms
+l3gd20_dupe: 10462 events
+l3gd20_bad_reg: 0 events
+l3gd20_err: 0 events
+l3gd20_read: 22324 events, 0 overruns, 628741us elapsed, 28us avg, min 21us max 37us 5.934us rms
+mpu6k_duplicates: 4036 events
+mpu6k_reset: 0 events
+mpu6k_good_trans: 15921 events
+mpu6k_bad_reg: 0 events
+mpu6k_bad_trans: 0 events
+mpu6k_read: 19959 events, 0 overruns, 993939us elapsed, 49us avg, min 30us max 70us 11.671us rms
+mpu6k_gyro_read: 0 events
+mpu6k_acc_read: 1 events
+ctrl_latency: 3632 events, 0 overruns, 1763136us elapsed, 485us avg, min 352us max 1467us 63.839us rms
+adc_samples: 15890 events, 0 overruns, 40213us elapsed, 2us avg, min 2us max 3us 0.499us rms
+ms5611_buf_of: 1089 events
+ms5611_com_err: 0 events
+ms5611_measure: 1458 events, 0 overruns, 13736us elapsed, 9us avg, min 6us max 630us 24.741us rms
+ms5611_read: 1458 events, 0 overruns, 132581us elapsed, 90us avg, min 11us max 853us 98.463us rms
+dma_alloc: 6 events
+
+LOAD PRE-FLIGHT
+
+Processes: 21 total, 2 running, 19 sleeping
+CPU usage: 24.82% tasks, 25.43% sched, 49.76% idle
+Uptime: 18.556s total, 11.865s idle
+
+ PID COMMAND                   CPU(ms) CPU(%)  USED/STACK PRIO(BASE) STATE 
+   0 Idle Task                   11865 49.755     0/    0   0 (  0)  READY 
+   1 hpwork                        432  2.078   948/ 1592 192 (192)  w:sem 
+   2 lpwork                         77  0.244   572/ 1592  50 ( 50)  w:sig 
+   3 init                         1626  0.000  1444/ 2496 100 (100)  w:sem 
+ 242 sdlog2_writer                  31  3.789  1044/ 2040  95 ( 95)  w:sem 
+  90 gps                            17  0.000   764/ 1192 220 (220)  w:sem 
+  92 dataman                        22  0.000   652/ 1192  90 ( 90)  w:sem 
+ 118 sensors                       479  1.833  1716/ 1992 250 (250)  w:sem 
+ 120 commander                     429  1.589  3196/ 3592 140 (140)  READY 
+ 121 commander_low_prio            330  0.000   772/ 2992  50 ( 50)  w:sem 
+ 126 px4io                         587  2.567  1036/ 1392 240 (240)  w:sem 
+ 136 mavlink_if0                   159  0.733  2308/ 2792 100 (100)  READY 
+ 137 mavlink_rcv_if0                 1  0.000   796/ 2096 175 (175)  w:sem 
+ 144 mavlink_if1                   125  0.611  2324/ 2792 100 (100)  READY 
+ 145 mavlink_rcv_if1                 1  0.000   828/ 2096 175 (175)  w:sem 
+ 179 sdlog2                        202  3.422  2916/ 3392 177 (177)  RUN   
+ 213 attitude_estimator_q          755  3.667  2012/ 2496 250 (250)  w:sem 
+ 219 position_estimator_inav       364  1.955  4932/ 5296 250 (250)  w:sem 
+ 229 mc_att_control                363  1.833  1308/ 1496 250 (250)  w:sem 
+ 231 mc_pos_control                 97  0.488  1092/ 1896 250 (250)  w:sem 
+ 238 navigator                       2  0.000   900/ 1496 105 (105)  w:sem 

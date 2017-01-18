@@ -1,0 +1,102 @@
+Release Notes
+
+Neural Network Based
+System Identification Toolbox
+
+Version 2.0
+
+Department of Automation, Technical University of Denmark, January, 2000
+
+
+
+This note contains important information on how the present toolbox is to be 
+installed and the conditions under which it may be used. Please read it 
+carefully before use.
+
+The note should be sufficient for being able to make the essential portion of 
+the toolbox functions work properly. However, to enhance performance a number of 
+functions have been rewritten in C and in order to compile these, it is 
+necessary to read the information about CMEX files found in the Matlab External 
+Interface Guide as well as to have some familiarity with compiling C programs.
+
+
+INSTALLING THE TOOLBOX
+o       All toolbox functions are implemented as plain m-files, but to enhance
+        performance CMEX duplicates have been written for some of the most
+        important functions. In the MATLAB 4.2 version the Makefile contains 
+        the commands necessary for compiling the C-routines. If one is running
+        MATLAB 4.2 under HP-UX, it should be possible simply to write
+        >> !make
+        in the MATLAB command window to invoke the compiler. If one is working
+        on another platform it will be necessary to modify the Makefile
+        accordingly. It is strongly recommended that the compilation be
+        optimized with respect to execution speed as much as the compiler
+        permits. Under MATLAB5 it might be necessary to copy the file 
+        mexopts.sh to the working directory and modify it appropriately. To
+        compile the MEX files under MATLAB 5 just type
+        >> makemex
+        in the MATLAB command window.
+ 
+
+USING THE TOOLBOX
+o       The checks for incorrect functions calls are not very thorough and
+        consequently MATLAB will often respond with quite incomprehensible error
+        messages when a function is passed the wrong arguments. When calling a
+        CMEX-function, it may even cause MATLAB to crash. Hence, when using the
+        CMEX-functions it may be a good idea to make extra copies of the m-files
+        they are replacing (do not just rename the m-files since they are still
+        read by the "help" command). One can then start by calling the
+        m-functions first to make sure the call is correct.
+
+o       The functions have been optimized with respect to speed rather than
+        memory usage. For large network architectures and/or large data sets,
+        memory problems may thus occur. If one is running the student edition of
+        MATLAB one will almost certainly run into problems due to the rather
+        small maximum size of the matrices allowed.
+ 
+
+CONDITIONS/DISCLAIMER
+By using the toolbox the user agrees to all of the following.
+
+o       If one is going to publish any work where this toolbox has been used,
+        please remember it was obtained free of charge and include a reference
+        to the technical report: M. Norgaard:"Neural Network Based System
+        Identification Toolbox, version 2" Tech. Report. 00-E-891, Department of
+        Automation, Technical University of Denmark, 2000.
+
+o       Magnus Norgaard and IAU do not offer any support for this product
+        whatsoever. The toolbox is offered free of charge - take it or leave it!
+
+o       The toolbox is copyrighted freeware by Magnus Norgaard/Department of
+        Automation, DTU. It may be distributed freely unmodified. It is,
+        however, not permitted to utilize any part of the software in commercial
+        products without prior written consent of Magnus Norgaard, The
+        Department of Automation, DTU.
+
+o       THE TOOLBOX IS PROVIDED "AS-IS" WITHOUT WARRENTY OF ANY KIND, EITHER
+        EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRENTIES
+        OR CONDITIONS OF MECHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. IN
+        NO EVENT SHALL MAGNUS NORGAARD AND/OR THE DEPARTMENT OF AUTOMATION BE
+        LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES
+        OF ANY KIND, OR DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA, OR
+        PROFITS, WHETHER OR NOT MN/IAU HAVE BEEN ADVISED OF THE POSSIBILITY OF
+        SUCH DAMAGES, AND/OR ON ANY THEORY OF LIABILITY ARISING OUT OF OR IN
+        CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. 
+
+MATLAB is a trademark of The MathWorks, Inc.
+Borland C++ is a trademark of Borland International.
+MS-Windows is a trademark of Microsoft Coporation.
+
+
+Trademarks of other companies and/or organizations mentioned in this 
+documentation appear for identification purposes only and are the property of 
+their respective companies and/or organizations.
+
+
+January 23, 2000
+Magnus Norgaard
+Department of Automation, Building 326
+Technical University of Denmark
+2800 Lyngby
+Denmark
+e-mail: pmn@iau.dtu.dk

@@ -1,0 +1,67 @@
+PERFORMANCE COUNTERS POST-FLIGHT
+
+sd write: 93580 events, 0 overruns, 93579426us elapsed, 999us avg, min 9us max 108455us 3902.065us rms
+navigator: 57151 events, 0 overruns, 3538455us elapsed, 61us avg, min 33us max 68994us 294.430us rms
+mc_att_control: 175066 events, 0 overruns, 11817100us elapsed, 67us avg, min 57us max 230us 15.715us rms
+sd drop: 12577 events
+mavlink_txe: 0 events
+mavlink_el: 62112 events, 0 overruns, 4866007us elapsed, 78us avg, min 38us max 2370us 160.073us rms
+mavlink_txe: 0 events
+mavlink_el: 69312 events, 0 overruns, 6331040us elapsed, 91us avg, min 47us max 21400us 2181.281us rms
+io latency: 175068 events, 0 overruns, 111829090us elapsed, 638us avg, min 482us max 1432us 109.589us rms
+io write: 0 events, 0 overruns, 0us elapsed, 0us avg, min 0us max 0us 0.000us rms
+io update: 175068 events, 0 overruns, 114259085us elapsed, 652us avg, min 258us max 2784us 765.112us rms
+io_txns: 345134 events, 0 overruns, 106724436us elapsed, 309us avg, min 158us max 771us 100.871us rms
+sensors: 175069 events, 0 overruns, 11590826us elapsed, 66us avg, min 40us max 1005us 57.545us rms
+lsm303d_acc_dupe: 104263 events
+lsm303d_bad_val: 0 events
+lsm303d_bad_reg: 0 events
+lsm303d_mag_read: 70239 events, 0 overruns, 1706163us elapsed, 24us avg, min 24us max 25us 0.460us rms
+lsm303d_acc_read: 668951 events, 0 overruns, 20287376us elapsed, 30us avg, min 20us max 36us 4.513us rms
+l3gd20_dupe: 460071 events
+l3gd20_bad_reg: 0 events
+l3gd20_err: 0 events
+l3gd20_read: 982380 events, 0 overruns, 27704914us elapsed, 28us avg, min 21us max 38us 6.047us rms
+mpu6k_duplicates: 176869 events
+mpu6k_reset: 0 events
+mpu6k_good_trans: 701137 events
+mpu6k_bad_reg: 0 events
+mpu6k_bad_trans: 0 events
+mpu6k_read: 878007 events, 0 overruns, 43720550us elapsed, 49us avg, min 30us max 69us 11.789us rms
+mpu6k_gyro_read: 0 events
+mpu6k_acc_read: 0 events
+ctrl_latency: 175073 events, 0 overruns, 93901433us elapsed, 536us avg, min 420us max 1373us 66.291us rms
+adc_samples: 702400 events, 0 overruns, 1783743us elapsed, 2us avg, min 2us max 3us 0.506us rms
+ms5611_buf_of: 48072 events
+ms5611_com_err: 0 events
+ms5611_measure: 64097 events, 0 overruns, 609510us elapsed, 9us avg, min 6us max 1026us 32.417us rms
+ms5611_read: 64097 events, 0 overruns, 5929227us elapsed, 92us avg, min 11us max 1368us 110.006us rms
+dma_alloc: 1 events
+
+LOAD POST-FLIGHT
+
+Processes: 20 total, 2 running, 18 sleeping
+CPU usage: 24.52% tasks, 4.77% sched, 70.71% idle
+Uptime: 725.196s total, 467.089s idle
+
+ PID COMMAND                   CPU(ms) CPU(%)  USED/STACK PRIO(BASE) STATE 
+   0 Idle Task                  467088 70.706     0/    0   0 (  0)  READY 
+   1 hpwork                      20043  2.576   852/ 1592 192 (192)  w:sig 
+   2 lpwork                       2791  0.286   572/ 1592  50 ( 50)  READY 
+   3 init                         1601  0.000  1420/ 2496 100 (100)  w:sem 
+  90 gps                          1568  0.190   844/ 1192 220 (220)  w:sem 
+  92 dataman                        22  0.000   668/ 1192  90 ( 90)  w:sem 
+ 118 sensors                     18663  2.290  1664/ 1992 250 (250)  w:sem 
+ 120 commander                   16162  2.194  3212/ 3592 140 (140)  READY 
+ 121 commander_low_prio            353  0.000   772/ 2992  50 ( 50)  w:sem 
+ 126 px4io                       24697  3.339  1044/ 1392 240 (240)  w:sem 
+ 136 mavlink_if0                  6622  0.858  2340/ 2792 100 (100)  READY 
+ 137 mavlink_rcv_if0                54  0.000   828/ 2096 175 (175)  w:sem 
+ 144 mavlink_if1                  5266  0.667  2340/ 2792 100 (100)  READY 
+ 145 mavlink_rcv_if1                54  0.000   828/ 2096 175 (175)  w:sem 
+ 179 sdlog2                      58375  0.000  2932/ 3392 177 (177)  RUN   
+ 213 attitude_estimator_q        35609  4.770  2012/ 2496 250 (250)  w:sem 
+ 219 position_estimator_inav     25908  3.435  4932/ 5296 250 (250)  w:sem 
+ 229 mc_att_control              17806  2.290  1316/ 1496 250 (250)  w:sem 
+ 231 mc_pos_control               6216  0.763  1292/ 1896 250 (250)  w:sem 
+ 238 navigator                    5914  0.858   892/ 1496 105 (105)  READY 
