@@ -37,4 +37,4 @@ The other methods also follow a similar structure
 
 Creator - [Navaneeth Krishnan](https://www.facebook.com/princeniken)
 
-Maintainer - [Saumya Kummar](https://dronefreak.bitbucket.io/)
+Maintainer - [Saumya Kumaar](https://dronefreak.bitbucket.io/)
