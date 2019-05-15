@@ -1,6 +1,6 @@
-##System Identification
+## System Identification
 
-###About
+### About
 
 System Identification is done on a TREX 550 flybarless helicopter using the parameters used for the Yamaha RMAX helicopter as done in Bernard Mettler's paper.
 There are 6 methods that requires testing namely
@@ -17,7 +17,7 @@ We aim to minimize the error between the graphs of the actual data and the fligh
 The major changes have been done in the sphere(or cost) function of each of the methods.
 
 ---
-###How to run IWO
+### How to run IWO
 - Open `iwo.m` and `sphere.m` (Changes have been made only in that)
 - Open `best.mat` This workspace contains inr-the input matrix of 4 inputs recorded along the time steps
                                          outr- 10 outputs excluding rfb,c and d because we do not have a way to measure them
