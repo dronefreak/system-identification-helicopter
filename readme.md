@@ -2,17 +2,14 @@
 
 ### About
 
-System Identification is done on a TREX 550 flybarless helicopter using the parameters used for the Yamaha RMAX helicopter as done in Bernard Mettler's paper.
-There are 6 methods that requires testing namely
+System Identification of an unmanned (TREX 550) flybarless helicopter using the state-space structure of a Yamaha RMAX helicopter as done in Bernard Mettler's paper.
+The code optimises these parameters to get best fit using two different algorithms
 
 - *Genetic Algorithms*- Testing done
 - *Invasive Weed Optimization*- Testing done
 - *Simulated Annealing*
-- *Biogeography-based Optimization*
-- *Cultural Algorithm*
-- *Imperialist Collective Optimization*
 
-We aim to minimize the error between the graphs of the actual data and the flight data. 
+We aim to maximise the Pearson correlation coefficient  the actual data and the flight data. 
 
 The major changes have been done in the sphere(or cost) function of each of the methods.
 
@@ -31,10 +28,10 @@ The major changes have been done in the sphere(or cost) function of each of the 
 - Copy this array vertically in the variable in the workspace called popul
 - Now run PopulCheck.m to visualize the model
 -----------------------------------------------------------------------------------
-The other methods also follow a similar structure
+The SA also follows a similar structure
 
 ---
 
-Creator - [Navaneeth Krishnan](https://www.facebook.com/princeniken)
+Creator - [Navaneeth Krishnan](https://github.com/Navaneeth-krishnan)
 
 Maintainer - [Saumya Kumaar](https://dronefreak.bitbucket.io/)
