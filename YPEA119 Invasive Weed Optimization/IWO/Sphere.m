@@ -1,164 +1,212 @@
+function cost = Sphere(parameters, inputData, outputData, timeVector)
+% SPHERE - Cost function for helicopter system identification
+%
+% This function evaluates the cost of a given parameter set by:
+% 1. Creating a state-space model from the 40 parameters
+% 2. Simulating the model with actual input data
+% 3. Comparing simulated output with actual flight test data
+% 4. Computing cost based on correlation coefficients
+%
+% Inputs:
+%    parameters  - 1×40 array of state-space model parameters
+%    inputData   - N×4 matrix of control inputs (lateral, longitudinal, pedal, collective)
+%    outputData  - N×10 matrix of measured outputs
+%    timeVector  - N×1 time vector for simulation
+%
+% Outputs:
+%    cost        - Scalar cost value (lower is better)
+%                  Returns Inf for invalid parameters
+%
+% Author: System Identification Project
+% Date: 2026-01-06
 
-
-function z = Sphere(x,in,ou,t)
-%x=BestSol_Para;
-x=x';
-g=9.8;
-%------------Declaring Parameters(F Matrix)--------------------------------
-Xu=x(1,1);
-Xa=x(2,1);
-Yv=x(3,1);
-Yb=x(4,1);
-Lu=x(5,1);
-Lv=x(6,1);
-Lb=x(7,1);
-Lw=x(8,1);
-Mu=x(9,1);
-Mv=x(10,1);
-Ma=x(11,1);
-Mw=x(12,1);
-Tf=x(13,1);
-Ab=x(14,1);
-Ac=x(15,1);
-Ba=x(16,1);
-Bd=x(17,1);
-Za=x(18,1);
-Zb=x(19,1);
-Zw=x(20,1);
-Zr=x(21,1);
-Nv=x(22,1);
-Np=x(23,1);
-Nw=x(24,1);
-Nr=x(25,1);
-Nrfb=x(26,1);
-Kr=x(27,1);
-Krfb=x(28,1);
-Ts=x(29,1); 
-%------------Declaring Parameters(G Matrix)--------------------------------
-Yped=x(30,1);
-Mcol=x(31,1);
-Alat=x(32,1);
-Alon=x(33,1);
-Blat=x(34,1);
-Blon=x(35,1);
-Zcol=x(36,1);
-Nped=x(37,1);
-Ncol=x(38,1);
-Clon=x(39,1);
-Dlat=x(40,1);
-
-%------------Declaring Matrices--------------------------------------------
-A=[Xu 0   0   0 0 -g  Xa     0     0   0  0     0      0
-   0  Yv  0   0 g  0  0      Yb    0   0  0     0      0
-   Lu Lv  0   0 0  0  0      Lb    Lw  0  0     0      0
-   Mu Mv  0   0 0  0  Ma     0     Mw  0  0     0      0
-   0  0   1   0 0  0  0      0     0   0  0     0      0
-   0  0   0   1 0  0  0      0     0   0  0     0      0
-   0  0   0  -1 0  0 -1/Tf   Ab/Tf 0   0  0     Ac/Tf  0
-   0  0  -1   0 0  0  Ba/Tf -1/Tf  0   0  0     0      Bd/Tf 
-   0  0   0   0 0  0  Za     Zb    Zw  Zr 0     0      0
-   0  Nv  Np  0 0  0  0      0     Nw  Nr Nrfb  0      0
-   0  0   0   0 0  0  0      0     0   Kr Krfb  0      0
-   0  0   0  -1 0  0  0      0     0   0  0    -1/Ts   0
-   0  0  -1   0 0  0  0      0     0   0  0     0     -1/Ts];
-B=[0       0       0       0
-   0       0       0       0
-   0       0       Yped    0
-   0       0       0       Mcol
-   0       0       0       0
-   0       0       0       0
-   Alat/Tf Alon/Tf 0       0
-   Blat/Tf Blon/Tf 0       0
-   0       0       0       Zcol
-   0       0       Nped    Ncol
-   0       0       0       0
-   0       Clon/Ts 0       0
-   Dlat/Ts 0       0       0];
-
-C=eye(13);
-D=0;
-mod=ss(A,B,C,D);
- y(:,:,1)=lsim(mod,in,t);
-%  out_data=fft(ou);
-% test_out=fft(y);
-%  z=0;
-%  for i=1:10
-%  z=z+ goodnessOfFit(test_out(:,i),out_data(:,i),'MSE');
-%      %z=z + sum(abs(out_data(:,i)-test_out(:,i)));
-%  end
-%  
-%  if isreal(z)
-%  else
-%      z=inf;
-%  end
-%  
-     
- 
- 
- 
- 
- 
- 
-%  
-%  cor1=sum(abs(y(:,1,1)-ou(:,1)));
-%  cor2=sum(abs(y(:,2,1)-ou(:,2)));
-%  cor3=sum(abs(y(:,3,1)-ou(:,3)));
-%  cor4=sum(abs(y(:,4,1)-ou(:,4)));
-%  cor5=sum(abs(y(:,5,1)-ou(:,5)));
-%  cor6=sum(abs(y(:,6,1)-ou(:,6)));
-%  cor7=sum(abs(y(:,7,1)-ou(:,7)));
-%  cor8=sum(abs(y(:,8,1)-ou(:,8)));
-%  cor9=sum(abs(y(:,9,1)-ou(:,9)));
-%  cor10=sum(abs(y(:,10,1)-ou(:,10)));
-%  
-%  d1=cor1;
-%  d2=cor2;
-%  d3=cor3;
-%  d4=cor4;
-%  d5=cor5;
-%  d6=cor6;
-%  d7=sqrt(sqrt(cor7));
-%  d8=sqrt(sqrt(cor8));
-%  d9=(cor9);
-%  d10=cor10;
-%  
-%  fit=abs((d1+d2+d3+d4+d5+d6+d7+d8+d9+d10));
-%     if isnan(fit)
-%         fit=1000000000;
-%     end
-%     
- cor1=corrcoef(y(:,1,1),ou(:,1));
- cor2=corrcoef(y(:,2,1),ou(:,2));
- cor3=corrcoef(y(:,3,1),ou(:,3));
- cor4=corrcoef(y(:,4,1),ou(:,4));
- cor5=corrcoef(y(:,5,1),ou(:,5));
- cor6=corrcoef(y(:,6,1),ou(:,6));
- cor7=corrcoef(y(:,7,1),ou(:,7));
- cor8=corrcoef(y(:,8,1),ou(:,8));
- cor9=corrcoef(y(:,9,1),ou(:,9));
- cor10=corrcoef(y(:,10,1),ou(:,10));
- 
- d1=abs(cor1(1,2));
- d2=abs(cor2(1,2));
- d3=abs(cor3(1,2));
- d4=abs(cor4(1,2));
- d5=abs(cor5(1,2));
- d6=abs(cor6(1,2));
- d7=(cor7(1,2));
- d8=(cor8(1,2));
- d9=abs(cor9(1,2));
- d10=abs(cor10(1,2));
- 
-cor= d1+d2+d3+d4+d5+d6+d9+d10;
-if isreal(cor)
-  z=8-cor;
-end
-    if isnan(cor)
-        z=Inf;
+    %% Input Validation
+    if nargin < 4
+        error('Sphere:NotEnoughInputs', ...
+              'This function requires 4 inputs: parameters, inputData, outputData, timeVector');
     end
 
- 
-  
+    % Validate parameter dimensions
+    if ~isvector(parameters) || length(parameters) ~= 40
+        error('Sphere:InvalidParameters', ...
+              'Parameters must be a vector of length 40');
+    end
 
+    % Validate data dimensions
+    if size(inputData, 2) ~= 4
+        error('Sphere:InvalidInputData', ...
+              'inputData must have 4 columns (control inputs)');
+    end
+
+    if size(outputData, 2) ~= 10
+        error('Sphere:InvalidOutputData', ...
+              'outputData must have 10 columns (measurements)');
+    end
+
+    % Check for NaN or Inf in parameters
+    if any(isnan(parameters)) || any(isinf(parameters))
+        cost = Inf;
+        return;
+    end
+
+    %% Load Configuration
+    config = config_iwo();
+    gravity = config.gravity;
+
+    %% Extract Parameters
+    % Ensure parameters is a column vector
+    params = parameters(:);
+
+    % Velocity derivatives
+    Xu = params(1);
+    Xa = params(2);
+    Yv = params(3);
+    Yb = params(4);
+
+    % Rotational derivatives
+    Lu = params(5);
+    Lv = params(6);
+    Lb = params(7);
+    Lw = params(8);
+    Mu = params(9);
+    Mv = params(10);
+    Ma = params(11);
+    Mw = params(12);
+
+    % Time constants
+    Tf = params(13);
+    Ts = params(29);
+
+    % Flapping dynamics
+    Ab = params(14);
+    Ac = params(15);
+    Ba = params(16);
+    Bd = params(17);
+
+    % Vertical dynamics
+    Za = params(18);
+    Zb = params(19);
+    Zw = params(20);
+    Zr = params(21);
+
+    % Yaw dynamics
+    Nv = params(22);
+    Np = params(23);
+    Nw = params(24);
+    Nr = params(25);
+    Nrfb = params(26);
+    Kr = params(27);
+    Krfb = params(28);
+
+    % Control effectiveness parameters
+    Yped = params(30);
+    Mcol = params(31);
+    Alat = params(32);
+    Alon = params(33);
+    Blat = params(34);
+    Blon = params(35);
+    Zcol = params(36);
+    Nped = params(37);
+    Ncol = params(38);
+    Clon = params(39);
+    Dlat = params(40);
+
+    %% Construct State-Space Matrices
+    % A matrix (13×13) - System dynamics
+    A = [Xu    0      0      0      0      -gravity  Xa        0        0      0      0        0        0
+         0     Yv     0      0      gravity 0        0         Yb       0      0      0        0        0
+         Lu    Lv     0      0      0       0        0         Lb       Lw     0      0        0        0
+         Mu    Mv     0      0      0       0        Ma        0        Mw     0      0        0        0
+         0     0      1      0      0       0        0         0        0      0      0        0        0
+         0     0      0      1      0       0        0         0        0      0      0        0        0
+         0     0      0     -1      0       0       -1/Tf      Ab/Tf    0      0      0        Ac/Tf    0
+         0     0     -1      0      0       0        Ba/Tf    -1/Tf     0      0      0        0        Bd/Tf
+         0     0      0      0      0       0        Za        Zb       Zw     Zr     0        0        0
+         0     Nv     Np     0      0       0        0         0        Nw     Nr     Nrfb     0        0
+         0     0      0      0      0       0        0         0        0      Kr     Krfb     0        0
+         0     0      0     -1      0       0        0         0        0      0      0       -1/Ts     0
+         0     0     -1      0      0       0        0         0        0      0      0        0       -1/Ts];
+
+    % B matrix (13×4) - Control inputs
+    B = [0         0         0        0
+         0         0         0        0
+         0         0         Yped     0
+         0         0         0        Mcol
+         0         0         0        0
+         0         0         0        0
+         Alat/Tf   Alon/Tf   0        0
+         Blat/Tf   Blon/Tf   0        0
+         0         0         0        Zcol
+         0         0         Nped     Ncol
+         0         0         0        0
+         0         Clon/Ts   0        0
+         Dlat/Ts   0         0        0];
+
+    % C matrix (13×13) - Output mapping (identity for full state observation)
+    C = eye(13);
+
+    % D matrix - No direct feedthrough
+    D = 0;
+
+    %% Create and Simulate State-Space Model
+    try
+        % Create state-space model
+        model = ss(A, B, C, D);
+
+        % Simulate model response
+        simulatedOutput = lsim(model, inputData, timeVector);
+
+    catch ME
+        % If model creation or simulation fails, return high cost
+        warning('Sphere:SimulationError', ...
+                'Error in model simulation: %s', ME.message);
+        cost = Inf;
+        return;
+    end
+
+    %% Calculate Correlation Coefficients
+    % We use only the first 10 outputs (exclude states 11-13 which cannot be measured)
+    correlationSum = 0;
+    numOutputs = min(10, size(outputData, 2));
+
+    for i = 1:numOutputs
+        try
+            % Calculate correlation coefficient matrix
+            corrMatrix = corrcoef(simulatedOutput(:, i), outputData(:, i));
+
+            % Extract correlation coefficient (off-diagonal element)
+            correlationCoeff = abs(corrMatrix(1, 2));
+
+            % Check for NaN (can occur if std dev is zero)
+            if isnan(correlationCoeff)
+                correlationCoeff = 0;
+            end
+
+            % Sum correlations (skip outputs 7 and 8 as per original logic)
+            if i ~= 7 && i ~= 8
+                correlationSum = correlationSum + correlationCoeff;
+            end
+
+        catch ME
+            warning('Sphere:CorrelationError', ...
+                    'Error calculating correlation for output %d: %s', i, ME.message);
+            % If correlation calculation fails, assume no correlation
+            correlationSum = correlationSum + 0;
+        end
+    end
+
+    %% Compute Cost
+    % Target correlation sum is 8 (perfect correlation for 8 outputs)
+    % Cost = difference from perfect correlation
+    if isreal(correlationSum) && ~isnan(correlationSum)
+        cost = config.correlationTarget - correlationSum;
+    else
+        cost = Inf;
+    end
+
+    % Ensure cost is non-negative
+    if cost < 0
+        cost = 0;
+    end
 
 end
