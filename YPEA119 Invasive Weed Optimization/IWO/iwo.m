@@ -1,252 +1,240 @@
 %
-% Copyright (c) 2015, Yarpiz (www.yarpiz.com)
-% All rights reserved. Please read the "license.txt" for license terms.
+% IWO - Invasive Weed Optimization for Helicopter System Identification
 %
-% Project Code: YPEA119
-% Project Title: Implementation of Invasive Weed Optimization in MATLAB
-% Publisher: Yarpiz (www.yarpiz.com)
-% 
-% Developer: S. Mostapha Kalami Heris (Member of Yarpiz Team)
-% 
-% Contact Info: sm.kalami@gmail.com, info@yarpiz.com
+% This script implements the Invasive Weed Optimization algorithm to identify
+% 40 aerodynamic and control parameters of an unmanned helicopter state-space
+% model. The optimization maximizes the correlation between simulated and
+% actual flight test data.
 %
-elements=round(numel(inr));
-global in ou t;
-in=in_H;
-ou=out_H;
-n=numel(outr(:,1));
-t=time;
-% t=t';
+% Required workspace variables (load from best.mat):
+%    in_H     - Input data for helicopter (4 control inputs × time steps)
+%    out_H    - Output data for helicopter (10 measurements × time steps)
+%    time     - Time vector for simulation
+%    inr      - Input matrix (required by cost function)
+%    outr     - Output matrix (required by cost function)
+%
+% Outputs:
+%    BestSol     - Structure containing best solution found
+%                  .Position: 40 optimized parameters
+%                  .Cost: Final cost value
+%    BestCosts   - Array of best cost at each iteration
+%    pop         - Final population
+%
+% Usage:
+%    load('best.mat')
+%    iwo
+%
+% Original Copyright (c) 2015, Yarpiz (www.yarpiz.com)
+% Modified for helicopter system identification
+% Author: S. Mostapha Kalami Heris, Modified by Project Team
+% Date: 2026-01-06
+%
+
+%% Validate Required Workspace Variables
+requiredVars = {'in_H', 'out_H', 'time', 'inr', 'outr'};
+missingVars = {};
+
+for i = 1:length(requiredVars)
+    if ~evalin('base', ['exist(''' requiredVars{i} ''', ''var'')'])
+        missingVars{end+1} = requiredVars{i}; %#ok<AGROW>
+    end
+end
+
+if ~isempty(missingVars)
+    error('IWO:MissingVariables', ...
+          'Missing required workspace variables: %s\nPlease load best.mat first.', ...
+          strjoin(missingVars, ', '));
+end
+
+%% Load Configuration
+config = config_iwo();
+
+%% Prepare Data (avoiding global variables)
+inputData = in_H;
+outputData = out_H;
+timeVector = time;
+
 %% Problem Definition
+CostFunction = @(x) Sphere(x, inputData, outputData, timeVector);
 
-CostFunction = @(x) Sphere(x,in,ou,t);  % Objective Function
+nVar = config.nVar;
+varSize = [1 nVar];
+varMin = config.varMin;
+varMax = config.varMax;
 
-nVar = 40;           % Number of Decision Variables
-VarSize = [1 nVar]; % Decision Variables Matrix Size
+%% Validate Parameter Bounds
+if length(varMin) ~= nVar || length(varMax) ~= nVar
+    error('IWO:InvalidBounds', ...
+          'Parameter bounds must have length %d (nVar)', nVar);
+end
 
-                    VarMin = [-1   -60   -1    -60   -1 ...
-                              -1    120   0    -0.1  -0.1 ... 
-                               40   0     0.01 -1     0 ...
-                              -1   -1    -20   -160  -1 ...                (Mettler Pos-Neg Range)
-                              -2    0    -10    0    -10 ...
-                              -100 -5    -20    0.01  0 ...
-                               0   -0.1  -1    -1    -0.1 ...
-                              -100 -80   -10   -1    -1];                  % Lower Bound of Decision Variables     
-              
-                    VarMax = [ 1     60    1    60    0 ...
-                               1     220   0    0.1   0.1 ... 
-                               120   0     1    0     1 ...
-                               1     1     20   100   1 ...               
-                               2     0.01  10   0     10 ...
-                               100   5     20   1     0 ...
-                               0     0.1   1    1     0.1 ...
-                               100   80    10   1     1];                  % Upper Bound of Decision Variables 
-%% IWO Parameters
-
-MaxIt = 5000;    % Maximum Number of Iterations
-
-nPop0 = 20;     % Initial Population Size
-nPop = 40;      % Maximum Population Size
-
-Smin = 2;       % Minimum Number of Seeds
-Smax = 7;       % Maximum Number of Seeds
-
-Exponent = 0.5;           % Variance Reduction Exponent
-sigma_initial = 0.9;    % Initial Value of Standard Deviation
-sigma_final = 0.001;	% Final Value of Standard Deviation
+%% IWO Algorithm Parameters
+maxIterations = config.maxIterations;
+initialPopSize = config.initialPopSize;
+maxPopSize = config.maxPopSize;
+minSeeds = config.minSeeds;
+maxSeeds = config.maxSeeds;
+varianceExponent = config.varianceExponent;
+sigmaInitial = config.sigmaInitial;
+sigmaFinal = config.sigmaFinal;
 
 %% Initialization
+fprintf('Starting Invasive Weed Optimization...\n');
+fprintf('Parameters: %d variables, %d iterations, population %d-%d\n', ...
+        nVar, maxIterations, initialPopSize, maxPopSize);
 
-% Empty Plant Structure
-empty_plant.Position = [];
-empty_plant.Cost = [];
+% Empty plant structure template
+emptyPlant.Position = [];
+emptyPlant.Cost = [];
 
-pop = repmat(empty_plant, nPop0, 1);    % Initial Population Array
+% Initialize population array
+population = repmat(emptyPlant, initialPopSize, 1);
 
-for i = 1:numel(pop)
-%     if i==1
-%       pop(i).Position =[-0.318654622287613,-17.8453381426888,-0.993998295501291,30.0546962349369,-0.0433158223659158,-0.334791393471090,211.623545732571,0,0.100000000000000,-0.0974421245437278,99.4487350826012,0,0.120286733634098,-0.0364429419846437,5.87927234911562e-05,0.0469387166324384,-0.507832782032205,-11.3842492471931,79.0519781190210,0.0255219773194581,-0.578720868835278,0.000978027055460892,-1.09512609205338,0,-7.65712691407085,71.8741055136934,-1.58712756290823,1.49453531166143,0.0414907198741265,0,0,-0.100000000000000,0.994234839455727,0.621657054488682,-0.0861540909996352,-81.4739396640063,-37.6390629641359,8.66095448573757,0.961950586660375,-0.649161518199722];  
-%    pop(i).Cost = CostFunction(pop(i).Position);
-%     else
-      % Initialize Position
-    pop(i).Position = unifrnd(VarMin,VarMax);
-    
-    
-    % Evaluation
-    pop(i).Cost = CostFunction(pop(i).Position);
-    
+% Initialize each plant with random position
+fprintf('Initializing population...\n');
+for i = 1:initialPopSize
+    % Initialize position with uniform random values within bounds
+    population(i).Position = unifrnd(varMin, varMax);
+
+    % Evaluate cost function
+    try
+        population(i).Cost = CostFunction(population(i).Position);
+    catch ME
+        warning('IWO:InitializationError', ...
+                'Error evaluating initial population member %d: %s', i, ME.message);
+        population(i).Cost = Inf;
+    end
+
+    % Check for invalid cost
+    if isnan(population(i).Cost) || ~isreal(population(i).Cost)
+        warning('IWO:InvalidCost', ...
+                'Invalid cost for population member %d, setting to Inf', i);
+        population(i).Cost = Inf;
+    end
 end
-% pop(1).Position=[-0.0473064690979077,59.4041049445030,-0.296884284761468,-56.2215819489845,0,-0.518282228913252,120,0,0.0907165029098635,0.0979909431328154,96.8053646034147,0,0.287820031408099,-0.103159686663789,0.696835091490538,0.985710497955199,-0.445529600673732,6.84257706236652,12.1818231714891,0.152009890513607,1.79127797360832,0.00324660882419941,0.879634078320579,0,-2.73801255483213,-52.0307324907271,0.159480671534981,-17.0261020023028,0.177668710695164,0,0,-0.0105976859805020,0.0670731474180124,0.123792286988724,-0.0623295610193758,70.8489177449588,37.4610946299896,-1.48779112825753,-0.773922780669298,-0.793421860213022];
-% pop(1).Cost = CostFunction(pop(1).Position);
-% Initialize Best Cost History
-BestCosts = zeros(MaxIt, 1);
+
+% Initialize best cost history
+bestCosts = zeros(maxIterations, 1);
+
+fprintf('Initialization complete. Starting optimization...\n\n');
 
 %% IWO Main Loop
+for iteration = 1:maxIterations
+    % Update standard deviation (decreases over iterations for convergence)
+    sigma = ((maxIterations - iteration) / (maxIterations - 1))^varianceExponent ...
+            * (sigmaInitial - sigmaFinal) + sigmaFinal;
 
-for it = 1:MaxIt
-%     if it==round(MaxIt*0.75)
-%     pop(1).Position=[-0.0473064690979077,59.4041049445030,-0.296884284761468,-56.2215819489845,0,-0.518282228913252,120,0,0.0907165029098635,0.0979909431328154,96.8053646034147,0,0.287820031408099,-0.103159686663789,0.696835091490538,0.985710497955199,-0.445529600673732,6.84257706236652,12.1818231714891,0.152009890513607,1.79127797360832,0.00324660882419941,0.879634078320579,0,-2.73801255483213,-52.0307324907271,0.159480671534981,-17.0261020023028,0.177668710695164,0,0,-0.0105976859805020,0.0670731474180124,0.123792286988724,-0.0623295610193758,70.8489177449588,37.4610946299896,-1.48779112825753,-0.773922780669298,-0.793421860213022];
-%     pop(1).Cost = CostFunction(pop(1).Position);
-%     end
-    % Update Standard Deviation
-    sigma = ((MaxIt - it)/(MaxIt - 1))^Exponent * (sigma_initial - sigma_final) + sigma_final;
-    
-    % Get Best and Worst Cost Values
-    Costs = [pop.Cost];
-    BestCost = min(Costs);
-    WorstCost = max(Costs);
-    
-    % Initialize Offsprings Population
-    newpop = [];
-    
-    % Reproduction
-    for i = 1:numel(pop)
-        
-        ratio = (pop(i).Cost - WorstCost)/(BestCost - WorstCost);
-        S = floor(Smin + (Smax - Smin)*ratio);
-        
-        for j = 1:S
-            
-            % Initialize Offspring
-            newsol = empty_plant;
-            
-            % Generate Random Location
-            newsol.Position = pop(i).Position + sigma * randn(VarSize);
-            
-            % Apply Lower/Upper Bounds
-            newsol.Position = max(newsol.Position, VarMin);
-            newsol.Position = min(newsol.Position, VarMax);
-            
-            % Evaluate Offsring
-            newsol.Cost = CostFunction(newsol.Position);
-            
-            % Add Offpsring to the Population
-            newpop = [newpop
-                      newsol];  %#ok
-            
+    % Get best and worst cost values in current population
+    costs = [population.Cost];
+    bestCost = min(costs);
+    worstCost = max(costs);
+
+    % Initialize offspring population
+    offspring = [];
+
+    % Reproduction: each plant produces seeds based on its fitness
+    for i = 1:numel(population)
+        % Calculate fitness ratio (better plants produce more seeds)
+        if worstCost ~= bestCost
+            ratio = (population(i).Cost - worstCost) / (bestCost - worstCost);
+        else
+            ratio = 0.5;  % All plants equal, use middle value
         end
-        
-    end
-    
-    % Merge Populations
-    pop = [pop
-           newpop];
-    
-    % Sort Population
-    [~, SortOrder]=sort([pop.Cost]);
-    pop = pop(SortOrder);
 
-    % Competitive Exclusion (Delete Extra Members)
-    if numel(pop)>nPop
-        pop = pop(1:nPop);
+        % Determine number of seeds (better plants → more seeds)
+        numSeeds = floor(minSeeds + (maxSeeds - minSeeds) * ratio);
+
+        % Generate seeds (offspring)
+        for j = 1:numSeeds
+            % Initialize offspring
+            newSolution = emptyPlant;
+
+            % Generate new position: parent position + random variation
+            newSolution.Position = population(i).Position + sigma * randn(varSize);
+
+            % Apply bounds
+            newSolution.Position = max(newSolution.Position, varMin);
+            newSolution.Position = min(newSolution.Position, varMax);
+
+            % Evaluate offspring
+            try
+                newSolution.Cost = CostFunction(newSolution.Position);
+            catch ME
+                warning('IWO:EvaluationError', ...
+                        'Error evaluating offspring at iteration %d: %s', ...
+                        iteration, ME.message);
+                newSolution.Cost = Inf;
+            end
+
+            % Validate cost
+            if isnan(newSolution.Cost) || ~isreal(newSolution.Cost)
+                newSolution.Cost = Inf;
+            end
+
+            % Add offspring to population
+            offspring = [offspring; newSolution]; %#ok<AGROW>
+        end
     end
-    
-    % Store Best Solution Ever Found
-    BestSol = pop(1);
-    
-    % Store Best Cost History
-    BestCosts(it) = BestSol.Cost;
-    
-    % Display Iteration Information
-    disp(['Trial' num2str(xn) ':Iteration ' num2str(it) ': Best Cost = ' num2str(BestCosts(it))]);
-    
+
+    % Merge parent and offspring populations
+    population = [population; offspring];
+
+    % Sort population by cost (ascending - lower is better)
+    [~, sortOrder] = sort([population.Cost]);
+    population = population(sortOrder);
+
+    % Competitive exclusion: keep only the best maxPopSize plants
+    if numel(population) > maxPopSize
+        population = population(1:maxPopSize);
+    end
+
+    % Store best solution found so far
+    bestSolution = population(1);
+
+    % Record best cost for this iteration
+    bestCosts(iteration) = bestSolution.Cost;
+
+    % Display progress
+    if mod(iteration, config.displayInterval) == 0 || iteration == 1
+        fprintf('Iteration %4d/%d: Best Cost = %.6f, Sigma = %.6f\n', ...
+                iteration, maxIterations, bestCosts(iteration), sigma);
+    end
 end
 
-%% Results
+%% Store Results in Base Workspace
+fprintf('\nOptimization complete!\n');
+fprintf('Final best cost: %.6f\n', bestSolution.Cost);
 
-figure;
-% plot(BestCosts,'LineWidth',2);
-semilogy(BestCosts,'LineWidth',2);
-xlabel('Iteration');
-ylabel('Best Cost');
-grid on;
+% Assign results to base workspace for user access
+assignin('base', 'BestSol', bestSolution);
+assignin('base', 'BestCosts', bestCosts);
+assignin('base', 'pop', population);
 
-% %%Validation
-% x= BestSol.position;
-% x=x';
-% Xu=x(1,1);
-% Xa=x(2,1);
-% Yv=x(3,1);
-% Yb=x(4,1);
-% Lu=x(5,1);
-% Lv=x(6,1);
-% Lb=x(7,1);
-% Lw=x(8,1);
-% Mu=x(9,1);
-% Mv=x(10,1);
-% Ma=x(11,1);
-% Mw=x(12,1);
-% Tf=x(13,1);
-% Ab=x(14,1);
-% Ac=x(15,1);
-% Ba=x(16,1);
-% Bd=x(17,1);
-% Za=x(18,1);
-% Zb=x(19,1);
-% Zw=x(20,1);
-% Zr=x(21,1);
-% 
-% Nv=x(22,1);
-% Np=x(23,1);
-% Nw=x(24,1);
-% Nr=x(25,1);
-% Nrfb=x(26,1);
-% Kr=x(27,1);
-% Krfb=x(28,1);
-% Ts=x(29,1);
-% 
-% Yped=x(30,1);
-% Mcol=x(31,1);
-% Alat=x(32,1);
-% Alon=x(33,1);
-% Blat=x(34,1);
-% Blon=x(35,1);
-% Zcol=x(36,1);
-% Nped=x(37,1);
-% Ncol=x(38,1);
-% Clon=x(39,1);
-% Dlat=x(40,1);
-% 
-%  A=[Xu,0,0,0,0,-9.81,Xa,0,0,0,0,0,0;
-%     0,Yv,0,0,9.81,0,0,Yb,0,0,0,0,0;
-%     Lu,Lv,0,0,0,0,0,Lb,Lw,0,0,0,0;
-%     Mu,Mv,0,0,0,0,Ma,0,Mw,0,0,0,0;
-%     0,0,1,0,0,0,0,0,0,0,0,0,0;
-%     0,0,0,1,0,0,0,0,0,0,0,0,0;
-%     0,0,0,-Tf,0,0,-1,Ab,0,0,0,Ac,0;
-%     0,0,-Tf,0,0,0,Ba,-1,0,0,0,0,Bd;
-%     0,0,0,0,0,0,Za,Zb,Zw,Zr,0,0,0;
-%     0,Nv,Np,0,0,0,0,0,Nw,Nr,Nrfb,0,0;
-%     0,0,0,0,0,0,0,0,0,Kr,Krfb,0,0;
-%     0,0,0,-Ts,0,0,0,0,0,0,0,-1,0;
-%     0,0,-Ts,0,0,0,0,0,0,0,0,0,-1];
-% 
-%  B=[0,0,0,0;
-%     0,0,Yped,0;
-%     0,0,0,0;
-%     0,0,0,Mcol;
-%     0,0,0,0;
-%     0,0,0,0;
-%     Alat,Alon,0,0;
-%     Blat,Blon,0,0;
-%     0,0,0,Zcol;
-%     0,0,Nped,Ncol;
-%     0,0,0,0;
-%     0,Clon,0,0;
-%     Dlat,0,0,0];
-% C=eye(13);
-% D=0;
-% mod=ss(A,B,C,D);
-% 
-% 
-%  y(:,:,1)=lsim(mod,in,t);
-%    cor1=corrcoef(y(:,1,1),ou(:,1));
-%    cor2=corrcoef(y(:,2,1),ou(:,2));
-%  cor3=corrcoef(y(:,3,1),ou(:,3));
-% cor4=corrcoef(y(:,4,1),ou(:,4));
-%   cor5=corrcoef(y(:,5,1),ou(:,5));
-%  cor6=corrcoef(y(:,6,1),ou(:,6));
-%  cor7=corrcoef(y(:,7,1),ou(:,7));
-%  cor8=corrcoef(y(:,8,1),ou(:,8));
-%  cor9=corrcoef(y(:,9,1),ou(:,9));
-%  cor10=corrcoef(y(:,10,1),ou(:,10));
+%% Results Visualization
+if config.plotResults
+    figure('Name', 'IWO Convergence', 'NumberTitle', 'off');
+
+    if config.useSemilogy
+        semilogy(bestCosts, 'LineWidth', 2);
+    else
+        plot(bestCosts, 'LineWidth', 2);
+    end
+
+    xlabel('Iteration');
+    ylabel('Best Cost');
+    title('IWO Convergence History');
+    grid on;
+
+    % Add annotations
+    hold on;
+    plot(1, bestCosts(1), 'go', 'MarkerSize', 10, 'LineWidth', 2);
+    plot(maxIterations, bestCosts(end), 'r*', 'MarkerSize', 10, 'LineWidth', 2);
+    legend('Cost History', 'Start', 'End', 'Location', 'best');
+    hold off;
+end
+
+fprintf('\nResults stored in workspace:\n');
+fprintf('  BestSol    - Best solution structure (.Position contains 40 parameters)\n');
+fprintf('  BestCosts  - Convergence history\n');
+fprintf('  pop        - Final population\n');
+fprintf('\nTo visualize results, run: PopulCheck\n');
