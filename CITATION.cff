@@ -1,0 +1,91 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "System Identification for Unmanned Helicopter using Metaheuristic Algorithms"
+version: 2.0.0
+date-released: 2026-01-06
+url: "https://github.com/dronefreak/system-identification-helicopter"
+repository-code: "https://github.com/dronefreak/system-identification-helicopter"
+license: MIT
+
+authors:
+  - family-names: "Krishnan"
+    given-names: "Navaneeth"
+    affiliation: "Independent Researcher"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+  - family-names: "Kumaar"
+    given-names: "Saumya"
+    affiliation: "Independent Researcher"
+    website: "https://dronefreak.bitbucket.io/"
+
+keywords:
+  - system-identification
+  - helicopter
+  - unmanned-aerial-vehicle
+  - optimization
+  - genetic-algorithm
+  - invasive-weed-optimization
+  - particle-swarm-optimization
+  - simulated-annealing
+  - artificial-bee-colony
+  - metaheuristic
+  - state-space-model
+  - MATLAB
+  - control-systems
+  - UAV
+  - TREX-550
+
+abstract: >
+  This software implements system identification for an unmanned TREX 550
+  flybarless helicopter using multiple metaheuristic optimization algorithms.
+  The system optimizes 40 aerodynamic and control parameters in a state-space
+  model based on Bernard Mettler's Yamaha RMAX helicopter framework. The
+  optimization maximizes the Pearson correlation coefficient between actual
+  flight test data and simulated model outputs. Implemented algorithms include
+  Invasive Weed Optimization (IWO), Genetic Algorithm (GA), Artificial Bee
+  Colony (ABC), Bees Behavior Algorithm (BBA), Particle Swarm Optimization
+  (PSO), and Simulated Annealing (SA).
+
+references:
+  - type: article
+    authors:
+      - family-names: "Mettler"
+        given-names: "Bernard"
+    title: "Identification Modeling and Characteristics of Miniature Rotorcraft"
+    journal: "Kluwer Academic Publishers"
+    year: 2003
+    scope: "The state-space helicopter model structure is based on this work."
+
+  - type: software
+    authors:
+      - name: "Yarpiz Team"
+    title: "YPEA - Yarpiz Evolutionary Algorithms"
+    url: "https://yarpiz.com"
+    year: 2015
+    scope: "IWO, ABC, and SA algorithm implementations adapted from this framework."
+
+preferred-citation:
+  type: software
+  authors:
+    - family-names: "Krishnan"
+      given-names: "Navaneeth"
+    - family-names: "Kumaar"
+      given-names: "Saumya"
+  title: "System Identification for Unmanned Helicopter using Metaheuristic Algorithms"
+  version: 2.0.0
+  year: 2019
+  url: "https://github.com/dronefreak/system-identification-helicopter"
+
+# BibTeX format for convenience
+identifiers:
+  - type: other
+    value: >
+      @software{krishnan2019sysid,
+        author = {Krishnan, Navaneeth and Kumaar, Saumya},
+        title = {System Identification for Unmanned Helicopter using Metaheuristic Algorithms},
+        year = {2019},
+        publisher = {GitHub},
+        version = {2.0.0},
+        url = {https://github.com/dronefreak/system-identification-helicopter}
+      }
+    description: "BibTeX citation"
