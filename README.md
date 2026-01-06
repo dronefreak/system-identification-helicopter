@@ -114,16 +114,17 @@ The following third-party libraries are included in the repository:
 
 ```matlab
 % 1. Navigate to IWO directory
-cd 'YPEA119 Invasive Weed Optimization/IWO'
+cd src/algorithms/iwo/IWO
 
 % 2. Load the workspace with flight data
-load('best.mat')
+load('../../../../data/experiments/best.mat')
 
 % 3. Run the optimization (5000 iterations)
 iwo
 
 % 4. Visualize results
-cd ../..
+cd ../../../..
+addpath('src/utils')
 PopulCheck
 ```
 
@@ -135,12 +136,12 @@ Expected runtime: **30-60 minutes** (depends on your CPU)
 
 | Algorithm | Status | Directory | Iterations | Population Size |
 |-----------|--------|-----------|------------|-----------------|
-| **Invasive Weed Optimization (IWO)** | ✅ Tested | `YPEA119 Invasive Weed Optimization/` | 5000 | 40 |
-| **Genetic Algorithm (GA)** | ✅ Tested | `GenAlg/` | 1000 | Variable |
-| **Artificial Bee Colony (ABC)** | ⚠️ Experimental | `Artificial Bee Colony/` | Configurable | Variable |
-| **Bees Behavior Algorithm (BBA)** | ⚠️ Experimental | `BBA/` | Configurable | Variable |
-| **Particle Swarm Optimization (PSO)** | 📝 Example | Root: `pso_in_MATLAB.m` | - | - |
-| **Simulated Annealing (SA)** | 🔨 In Development | `YPEA105 Simulated Annealing/` | Configurable | Variable |
+| **Invasive Weed Optimization (IWO)** | ✅ Tested | `src/algorithms/iwo/` | 5000 | 40 |
+| **Genetic Algorithm (GA)** | ✅ Tested | `src/algorithms/ga/` | 1000 | Variable |
+| **Artificial Bee Colony (ABC)** | ⚠️ Experimental | `src/algorithms/abc/` | Configurable | Variable |
+| **Bees Behavior Algorithm (BBA)** | ⚠️ Experimental | `src/algorithms/bba/` | Configurable | Variable |
+| **Particle Swarm Optimization (PSO)** | 📝 Example | `src/algorithms/pso_example.m` | - | - |
+| **Simulated Annealing (SA)** | 🔨 In Development | `src/algorithms/sa/` | Configurable | Variable |
 
 **Legend**: ✅ Fully tested | ⚠️ Experimental | 📝 Example code | 🔨 Under development
 
@@ -154,8 +155,8 @@ Expected runtime: **30-60 minutes** (depends on your CPU)
 
 ```matlab
 % Step 1: Load the workspace
-cd 'YPEA119 Invasive Weed Optimization/IWO'
-load('best.mat')  % Contains: inr, outr, t, population
+cd src/algorithms/iwo/IWO
+load('../../../../data/experiments/best.mat')  % Contains: inr, outr, t, population
 
 % Step 2: Run optimization
 iwo  % Runs for 5000 iterations
@@ -164,7 +165,8 @@ iwo  % Runs for 5000 iterations
 bestParameters = BestSol.Position;
 
 % Step 4: Visualize results
-cd ../..
+cd ../../../..
+addpath('src/utils')
 popul = bestParameters';  % Copy to popul variable
 PopulCheck  % Generates comparison plots
 ```
@@ -178,7 +180,7 @@ PopulCheck  % Generates comparison plots
 ### Running Genetic Algorithm
 
 ```matlab
-cd GenAlg
+cd src/algorithms/ga
 MainCode  % Run genetic algorithm optimization
 ```
 
@@ -186,19 +188,19 @@ MainCode  % Run genetic algorithm optimization
 
 **Artificial Bee Colony:**
 ```matlab
-cd 'Artificial Bee Colony'
+cd src/algorithms/abc
 main  % Run ABC optimization
 ```
 
 **Bees Behavior Algorithm:**
 ```matlab
-cd BBA
+cd src/algorithms/bba
 Main  % Run BBA optimization
 ```
 
 **Simulated Annealing:**
 ```matlab
-cd 'YPEA105 Simulated Annealing/01 TSP using SA (Standard)'
+cd 'src/algorithms/sa/01 TSP using SA (Standard)'
 % Configure and run
 ```
 
@@ -245,40 +247,52 @@ Where:
 
 ```
 system-identification-helicopter/
-├── YPEA119 Invasive Weed Optimization/  # IWO implementation
-│   └── IWO/
-│       ├── iwo.m                         # Main IWO algorithm
-│       ├── Sphere.m                      # Cost function
-│       └── best.mat                      # Flight data & initial population
+├── src/                                  # Source code
+│   ├── algorithms/                       # Optimization algorithms
+│   │   ├── iwo/                         # Invasive Weed Optimization
+│   │   │   └── IWO/
+│   │   │       ├── iwo.m                # Main IWO algorithm
+│   │   │       ├── Sphere.m             # Cost function
+│   │   │       └── config_iwo.m         # Configuration
+│   │   ├── ga/                          # Genetic Algorithm
+│   │   ├── abc/                         # Artificial Bee Colony
+│   │   ├── bba/                         # Bees Behavior Algorithm
+│   │   ├── sa/                          # Simulated Annealing
+│   │   └── pso_example.m                # PSO example
+│   │
+│   ├── models/                          # Helicopter dynamics models
+│   ├── utils/                           # Utility functions
+│   │   └── PopulCheck.m                 # Results visualization
+│   └── visualization/                   # 3D visualization & animation
+│       └── Animations/                  # Animation framework
 │
-├── GenAlg/                               # Genetic Algorithm
-│   ├── MainCode.m                        # GA main entry point
-│   ├── FitnessFun.m                      # Fitness evaluation
-│   ├── Chrominator.m                     # Parameter encoding
-│   └── Dechrominator.m                   # Parameter decoding
+├── data/                                # All data files
+│   ├── flight_data/                     # Raw flight test data
+│   │   └── raw/                         # .bin and .mat files
+│   ├── experiments/                     # Experimental results
+│   │   ├── best.mat                     # Primary dataset
+│   │   ├── best2.mat                    # Alternative dataset
+│   │   └── *.mat                        # Other results
+│   └── logs/                            # Flight and simulation logs
+│       ├── flight_logs/                 # 17 flight sessions
+│       └── reference/                   # Reference logs
 │
-├── Artificial Bee Colony/                # ABC algorithm
-├── BBA/                                  # Bees Behavior Algorithm
-├── YPEA105 Simulated Annealing/          # SA algorithm
+├── docs/                                # Documentation & papers
+│   ├── IFAC_heli_weed.doc              # Academic paper
+│   └── figures/                         # Plots and diagrams
 │
-├── Flight Data/                          # Raw flight test data (.bin files)
-├── Experiment_data/                      # Results and analysis PDFs
-├── log/                                  # Flight/simulation logs (17 sessions)
+├── examples/                            # Example scripts (planned)
+├── tests/                               # Test files (planned)
+├── results/                             # Output directory for new results
 │
-├── Animations/                           # 3D visualization
-│   ├── mws262-MatlabPlaneGraphics/       # 3D animation framework
-│   └── STLRead/                          # STL file reader
-│
-├── PopulCheck.m                          # Results visualization script
-├── pso_in_MATLAB.m                       # PSO example
-│
-├── *.mat                                 # Experiment results
-├── README.md                             # This file
-├── CONTRIBUTING.md                       # Contribution guidelines
-├── LICENSE                               # Project license
-├── CHANGELOG.md                          # Version history
-└── CITATION.cff                          # Citation information
+├── README.md                            # This file
+├── CONTRIBUTING.md                      # Contribution guidelines
+├── LICENSE                              # Project license
+├── CHANGELOG.md                         # Version history
+└── CITATION.cff                         # Citation information
 ```
+
+**Note**: Each directory contains its own README.md with detailed information.
 
 ---
 
