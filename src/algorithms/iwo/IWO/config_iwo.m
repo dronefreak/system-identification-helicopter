@@ -70,4 +70,11 @@ function config = config_iwo()
     config.preallocateOffspring = true;  % Preallocate offspring arrays
     config.clearIntermediateData = true; % Clear intermediate data to reduce memory
 
+    %% Reproducibility Options
+    config.useRandomSeed = false;        % Enable fixed random seed for reproducibility
+    config.randomSeed = 42;              % Random seed value (used if useRandomSeed = true)
+                                          % Set to specific value for reproducible results
+                                          % Set to 'shuffle' to use current time
+    config.saveRandomState = true;       % Save random number generator state with results
+
 end
