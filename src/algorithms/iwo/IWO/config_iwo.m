@@ -60,4 +60,14 @@ function config = config_iwo()
     config.plotResults = true;           % Generate convergence plot
     config.useSemilogy = true;           % Use logarithmic scale for cost plot
 
+    %% Performance Options
+    config.useParallel = false;          % Enable parallel cost function evaluation
+                                          % Requires Parallel Computing Toolbox
+    config.showProgress = true;          % Show progress bar during optimization
+    config.progressUpdateInterval = 10;  % Update progress every N iterations
+
+    %% Memory Optimization Options
+    config.preallocateOffspring = true;  % Preallocate offspring arrays
+    config.clearIntermediateData = true; % Clear intermediate data to reduce memory
+
 end

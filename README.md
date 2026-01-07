@@ -48,9 +48,12 @@ The optimization problem involves a **40-dimensional parameter space** represent
 - **Multiple Optimization Algorithms**: Six different metaheuristic algorithms implemented
 - **Real Flight Data**: Validated using actual flight test data from TREX 550 helicopter
 - **State-Space Modeling**: Based on Bernard Mettler's proven helicopter dynamics model
+- **Performance Optimizations**: Parallel computing, memory optimization, and progress tracking
+- **Profiling Tools**: Identify bottlenecks and optimize execution time
 - **3D Visualization**: Advanced animation and visualization capabilities
 - **Comprehensive Results**: Detailed comparison and statistical analysis tools
 - **Modular Design**: Easy to extend with new algorithms or cost functions
+- **Comprehensive Testing**: 47+ test cases covering unit, integration, and regression tests
 
 ---
 
@@ -90,12 +93,17 @@ savepath;
 - **Control System Toolbox** - For state-space models (`ss()`, `lsim()`)
 - **Statistics and Machine Learning Toolbox** - For correlation functions (recommended)
 
+### Optional MATLAB Toolboxes
+
+- **Parallel Computing Toolbox** - For parallel cost function evaluation (2-8x speedup)
+
 ### Verify Toolbox Installation
 
 ```matlab
 % Check if toolboxes are installed
 ver('control')
 ver('stats')
+ver('distcomp')  % Parallel Computing Toolbox (optional)
 ```
 
 ### Third-Party Dependencies
@@ -204,6 +212,56 @@ cd 'src/algorithms/sa/01 TSP using SA (Standard)'
 % Configure and run
 ```
 
+### Performance Optimization
+
+The IWO algorithm includes several performance optimization features:
+
+#### Enable Parallel Computing
+
+For 2-8x speedup with Parallel Computing Toolbox:
+
+```matlab
+% Edit src/algorithms/iwo/IWO/config_iwo.m:
+config.useParallel = true;  % Enable parallel evaluation
+
+% Then run normally
+load('data/experiments/best.mat')
+iwo
+```
+
+#### Profile Performance
+
+Identify bottlenecks and optimize:
+
+```matlab
+% Profile 100 iterations
+load('data/experiments/best.mat')
+results = profile_iwo('iterations', 100);
+
+% View detailed profiler report
+profview(0, results.profileInfo);
+```
+
+#### Configure Performance Settings
+
+Check system capabilities and configure:
+
+```matlab
+% Interactive performance configuration
+config = configure_performance();
+
+% Disable progress bar for batch processing
+config = configure_performance('progress', false);
+```
+
+**Performance Features**:
+- **Parallel Computing**: Evaluate cost functions simultaneously (2-8x speedup)
+- **Memory Optimization**: Preallocated arrays reduce overhead (enabled by default)
+- **Progress Tracking**: Real-time progress bar with ETA
+- **Profiling Tools**: Identify and optimize bottlenecks
+
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for the complete performance guide.
+
 ---
 
 ## Parameter Description
@@ -262,7 +320,9 @@ system-identification-helicopter/
 │   │
 │   ├── models/                          # Helicopter dynamics models
 │   ├── utils/                           # Utility functions
-│   │   └── PopulCheck.m                 # Results visualization
+│   │   ├── PopulCheck.m                 # Results visualization
+│   │   ├── profile_iwo.m                # Performance profiling
+│   │   └── configure_performance.m      # Performance configuration
 │   └── visualization/                   # 3D visualization & animation
 │       └── Animations/                  # Animation framework
 │
@@ -278,11 +338,19 @@ system-identification-helicopter/
 │       └── reference/                   # Reference logs
 │
 ├── docs/                                # Documentation & papers
+│   ├── PERFORMANCE.md                   # Performance optimization guide
 │   ├── IFAC_heli_weed.doc              # Academic paper
 │   └── figures/                         # Plots and diagrams
 │
-├── examples/                            # Example scripts (planned)
-├── tests/                               # Test files (planned)
+├── examples/                            # Example scripts
+├── tests/                               # Test suite (47+ test cases)
+│   ├── test_sphere_cost.m              # Cost function unit tests
+│   ├── test_config_iwo.m               # Configuration tests
+│   ├── test_popul_check.m              # Visualization tests
+│   ├── test_iwo_integration.m          # Integration tests
+│   ├── test_regression.m               # Regression tests
+│   ├── validate_installation.m         # Installation validator
+│   └── run_all_tests.m                 # Test runner
 ├── results/                             # Output directory for new results
 │
 ├── README.md                            # This file
@@ -387,11 +455,27 @@ nPop = 20;      % Instead of 40
 
 **Problem**: Optimization takes too long
 
-**Optimization tips**:
-- Close unnecessary MATLAB figures
-- Use MATLAB's parallel computing toolbox
-- Reduce iteration count for testing
-- Profile the cost function: `profile on; iwo; profile viewer`
+**Solution**: Use built-in performance optimization features:
+
+```matlab
+% Enable parallel computing (2-8x faster)
+% Edit src/algorithms/iwo/IWO/config_iwo.m:
+config.useParallel = true;
+
+% Profile to find bottlenecks
+load('data/experiments/best.mat')
+results = profile_iwo('iterations', 100);
+
+% Check configuration
+configure_performance();
+```
+
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for complete performance optimization guide.
+
+**Quick tips**:
+- Close unnecessary MATLAB figures during optimization
+- Reduce iteration count for testing: `config.maxIterations = 1000`
+- Monitor progress with built-in progress bar
 
 ---
 

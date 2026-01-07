@@ -78,6 +78,36 @@ varianceExponent = config.varianceExponent;
 sigmaInitial = config.sigmaInitial;
 sigmaFinal = config.sigmaFinal;
 
+%% Performance Options
+useParallel = config.useParallel;
+showProgress = config.showProgress;
+progressUpdateInterval = config.progressUpdateInterval;
+preallocateOffspring = config.preallocateOffspring;
+
+% Check for Parallel Computing Toolbox
+if useParallel
+    if license('test', 'Distrib_Computing_Toolbox')
+        try
+            % Try to get current pool, create if doesn't exist
+            poolObj = gcp('nocreate');
+            if isempty(poolObj)
+                fprintf('Starting parallel pool...\n');
+                poolObj = parpool;
+            end
+            fprintf('Using parallel pool with %d workers\n', poolObj.NumWorkers);
+        catch ME
+            warning('IWO:ParallelError', ...
+                    'Could not start parallel pool: %s\nFalling back to serial execution', ...
+                    ME.message);
+            useParallel = false;
+        end
+    else
+        warning('IWO:NoParallelToolbox', ...
+                'Parallel Computing Toolbox not available. Using serial execution.');
+        useParallel = false;
+    end
+end
+
 %% Initialization
 fprintf('Starting Invasive Weed Optimization...\n');
 fprintf('Parameters: %d variables, %d iterations, population %d-%d\n', ...
@@ -92,24 +122,53 @@ population = repmat(emptyPlant, initialPopSize, 1);
 
 % Initialize each plant with random position
 fprintf('Initializing population...\n');
-for i = 1:initialPopSize
-    % Initialize position with uniform random values within bounds
-    population(i).Position = unifrnd(varMin, varMax);
 
-    % Evaluate cost function
-    try
-        population(i).Cost = CostFunction(population(i).Position);
-    catch ME
-        warning('IWO:InitializationError', ...
-                'Error evaluating initial population member %d: %s', i, ME.message);
-        population(i).Cost = Inf;
+if useParallel
+    % Parallel initialization
+    positions = zeros(initialPopSize, nVar);
+    costs = zeros(initialPopSize, 1);
+
+    for i = 1:initialPopSize
+        positions(i, :) = unifrnd(varMin, varMax);
     end
 
-    % Check for invalid cost
-    if isnan(population(i).Cost) || ~isreal(population(i).Cost)
-        warning('IWO:InvalidCost', ...
-                'Invalid cost for population member %d, setting to Inf', i);
-        population(i).Cost = Inf;
+    parfor i = 1:initialPopSize
+        try
+            costs(i) = CostFunction(positions(i, :));
+            if isnan(costs(i)) || ~isreal(costs(i))
+                costs(i) = Inf;
+            end
+        catch
+            costs(i) = Inf;
+        end
+    end
+
+    % Assign to population
+    for i = 1:initialPopSize
+        population(i).Position = positions(i, :);
+        population(i).Cost = costs(i);
+    end
+else
+    % Serial initialization
+    for i = 1:initialPopSize
+        % Initialize position with uniform random values within bounds
+        population(i).Position = unifrnd(varMin, varMax);
+
+        % Evaluate cost function
+        try
+            population(i).Cost = CostFunction(population(i).Position);
+        catch ME
+            warning('IWO:InitializationError', ...
+                    'Error evaluating initial population member %d: %s', i, ME.message);
+            population(i).Cost = Inf;
+        end
+
+        % Check for invalid cost
+        if isnan(population(i).Cost) || ~isreal(population(i).Cost)
+            warning('IWO:InvalidCost', ...
+                    'Invalid cost for population member %d, setting to Inf', i);
+            population(i).Cost = Inf;
+        end
     end
 end
 
@@ -117,6 +176,13 @@ end
 bestCosts = zeros(maxIterations, 1);
 
 fprintf('Initialization complete. Starting optimization...\n\n');
+
+%% Initialize Progress Tracking
+if showProgress
+    progressBar = waitbar(0, 'IWO Optimization: Starting...', ...
+                          'Name', 'IWO Progress');
+end
+startTime = tic;
 
 %% IWO Main Loop
 for iteration = 1:maxIterations
@@ -129,10 +195,10 @@ for iteration = 1:maxIterations
     bestCost = min(costs);
     worstCost = max(costs);
 
-    % Initialize offspring population
-    offspring = [];
+    % Calculate total number of offspring for preallocation
+    totalSeeds = 0;
+    seedCounts = zeros(numel(population), 1);
 
-    % Reproduction: each plant produces seeds based on its fitness
     for i = 1:numel(population)
         % Calculate fitness ratio (better plants produce more seeds)
         if worstCost ~= bestCost
@@ -143,36 +209,95 @@ for iteration = 1:maxIterations
 
         % Determine number of seeds (better plants → more seeds)
         numSeeds = floor(minSeeds + (maxSeeds - minSeeds) * ratio);
+        seedCounts(i) = numSeeds;
+        totalSeeds = totalSeeds + numSeeds;
+    end
 
-        % Generate seeds (offspring)
+    % Preallocate offspring array for memory efficiency
+    if preallocateOffspring && totalSeeds > 0
+        offspringPositions = zeros(totalSeeds, nVar);
+        offspringCosts = zeros(totalSeeds, 1);
+    else
+        offspring = [];
+    end
+
+    % Generate all offspring positions first
+    offspringIdx = 1;
+    for i = 1:numel(population)
+        numSeeds = seedCounts(i);
+
         for j = 1:numSeeds
-            % Initialize offspring
-            newSolution = emptyPlant;
-
             % Generate new position: parent position + random variation
-            newSolution.Position = population(i).Position + sigma * randn(varSize);
+            newPosition = population(i).Position + sigma * randn(varSize);
 
             % Apply bounds
-            newSolution.Position = max(newSolution.Position, varMin);
-            newSolution.Position = min(newSolution.Position, varMax);
+            newPosition = max(newPosition, varMin);
+            newPosition = min(newPosition, varMax);
 
-            % Evaluate offspring
+            if preallocateOffspring
+                offspringPositions(offspringIdx, :) = newPosition;
+                offspringIdx = offspringIdx + 1;
+            else
+                newSolution = emptyPlant;
+                newSolution.Position = newPosition;
+                offspring = [offspring; newSolution]; %#ok<AGROW>
+            end
+        end
+    end
+
+    % Evaluate all offspring (parallel or serial)
+    if preallocateOffspring && totalSeeds > 0
+        if useParallel
+            % Parallel evaluation
+            parfor i = 1:totalSeeds
+                try
+                    offspringCosts(i) = CostFunction(offspringPositions(i, :));
+                    if isnan(offspringCosts(i)) || ~isreal(offspringCosts(i))
+                        offspringCosts(i) = Inf;
+                    end
+                catch
+                    offspringCosts(i) = Inf;
+                end
+            end
+        else
+            % Serial evaluation
+            for i = 1:totalSeeds
+                try
+                    offspringCosts(i) = CostFunction(offspringPositions(i, :));
+                catch ME
+                    warning('IWO:EvaluationError', ...
+                            'Error evaluating offspring at iteration %d: %s', ...
+                            iteration, ME.message);
+                    offspringCosts(i) = Inf;
+                end
+
+                if isnan(offspringCosts(i)) || ~isreal(offspringCosts(i))
+                    offspringCosts(i) = Inf;
+                end
+            end
+        end
+
+        % Create offspring structure array
+        offspring = repmat(emptyPlant, totalSeeds, 1);
+        for i = 1:totalSeeds
+            offspring(i).Position = offspringPositions(i, :);
+            offspring(i).Cost = offspringCosts(i);
+        end
+    elseif ~preallocateOffspring
+        % Evaluate offspring one by one (old method)
+        for i = 1:numel(offspring)
             try
-                newSolution.Cost = CostFunction(newSolution.Position);
+                offspring(i).Cost = CostFunction(offspring(i).Position);
             catch ME
                 warning('IWO:EvaluationError', ...
                         'Error evaluating offspring at iteration %d: %s', ...
                         iteration, ME.message);
-                newSolution.Cost = Inf;
+                offspring(i).Cost = Inf;
             end
 
-            % Validate cost
-            if isnan(newSolution.Cost) || ~isreal(newSolution.Cost)
-                newSolution.Cost = Inf;
+            if isnan(offspring(i).Cost) || ~isreal(offspring(i).Cost)
+                offspring(i).Cost = Inf;
             end
-
-            % Add offspring to population
-            offspring = [offspring; newSolution]; %#ok<AGROW>
         end
     end
 
@@ -194,11 +319,31 @@ for iteration = 1:maxIterations
     % Record best cost for this iteration
     bestCosts(iteration) = bestSolution.Cost;
 
+    % Update progress bar
+    if showProgress && (mod(iteration, progressUpdateInterval) == 0 || iteration == 1 || iteration == maxIterations)
+        progress = iteration / maxIterations;
+        elapsedTime = toc(startTime);
+        estimatedTotal = elapsedTime / progress;
+        remainingTime = estimatedTotal - elapsedTime;
+
+        if ishandle(progressBar)
+            waitbar(progress, progressBar, ...
+                    sprintf('Iteration %d/%d | Best: %.6f | ETA: %.1f min', ...
+                            iteration, maxIterations, bestCosts(iteration), ...
+                            remainingTime / 60));
+        end
+    end
+
     % Display progress
     if mod(iteration, config.displayInterval) == 0 || iteration == 1
         fprintf('Iteration %4d/%d: Best Cost = %.6f, Sigma = %.6f\n', ...
                 iteration, maxIterations, bestCosts(iteration), sigma);
     end
+end
+
+%% Cleanup Progress Bar
+if showProgress && ishandle(progressBar)
+    close(progressBar);
 end
 
 %% Store Results in Base Workspace

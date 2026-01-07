@@ -4,6 +4,7 @@ This directory contains project documentation, academic papers, and figures.
 
 ## Contents
 
+- `PERFORMANCE.md` - Performance optimization guide (parallel computing, profiling, memory optimization)
 - `IFAC_heli_weed.doc` - Academic paper on invasive weed optimization for helicopter system ID
 - `figures/` - Images, plots, and diagrams used in documentation
 
