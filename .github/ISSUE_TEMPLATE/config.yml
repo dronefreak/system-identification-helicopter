@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/dronefreak/system-identification-helicopter/blob/main/README.md
+    about: Check the README for usage instructions and examples
+  - name: Contributing Guide
+    url: https://github.com/dronefreak/system-identification-helicopter/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to this project
