@@ -108,6 +108,28 @@ if useParallel
     end
 end
 
+%% Reproducibility: Set Random Seed
+if config.useRandomSeed
+    if isnumeric(config.randomSeed)
+        rng(config.randomSeed);
+        fprintf('Random seed set to: %d (reproducible results)\n', config.randomSeed);
+    elseif strcmp(config.randomSeed, 'shuffle')
+        rng('shuffle');
+        fprintf('Random seed shuffled (non-reproducible results)\n');
+    else
+        warning('IWO:InvalidSeed', 'Invalid random seed value, using default');
+        rng('default');
+    end
+
+    % Save initial random state
+    if config.saveRandomState
+        initialRandomState = rng;
+    end
+else
+    % Use MATLAB's default random number generator behavior
+    initialRandomState = rng;
+end
+
 %% Initialization
 fprintf('Starting Invasive Weed Optimization...\n');
 fprintf('Parameters: %d variables, %d iterations, population %d-%d\n', ...
@@ -354,6 +376,13 @@ fprintf('Final best cost: %.6f\n', bestSolution.Cost);
 assignin('base', 'BestSol', bestSolution);
 assignin('base', 'BestCosts', bestCosts);
 assignin('base', 'pop', population);
+
+% Save random state for reproducibility
+if config.saveRandomState
+    finalRandomState = rng;
+    assignin('base', 'randomState', struct('initial', initialRandomState, ...
+                                           'final', finalRandomState));
+end
 
 %% Results Visualization
 if config.plotResults
