@@ -1,0 +1,175 @@
+# MATLAB Specific
+# ===============
+
+# Autosave files
+*.asv
+*.autosave
+
+# Code generation
+codegen/
+slprj/
+
+# MATLAB Profiler
+profile_results/
+
+# MEX files (compiled)
+*.mex*
+*.mexw32
+*.mexw64
+*.mexa64
+*.mexmaci64
+
+# P-code files
+*.p
+
+# Simulink files
+*.slxc
+*.mdl.autosave
+*.mdlp
+*.slx.autosave
+
+# MATLAB Project files
+*.prj
+resources/project/
+
+# System-Specific Backup Files
+# =============================
+*.m.backup
+*.mat.backup
+*~
+*.swp
+*.swo
+
+# Operating System Files
+# =======================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# IDE and Editor Files
+# ====================
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+Session.vim
+
+# Project-Specific
+# ================
+
+# Large data files (use Git LFS instead)
+# Uncomment the following if not using Git LFS:
+# *.mat
+# data/**/*.mat
+
+# Temporary computation results
+results/temp/
+results/*.tmp
+
+# Log files
+*.log
+logs/*.log
+data/logs/**/*.log
+
+# Generated figures (keep source code only)
+results/figures/*.png
+results/figures/*.jpg
+results/figures/*.pdf
+results/figures/*.eps
+!results/figures/README.md
+
+# Compiled documentation
+docs/build/
+docs/_build/
+
+# Test results and coverage
+test_results_*.mat
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Package/Distribution
+# ====================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+dist/
+build/
+
+# Python (if any Python tools are used)
+# ======================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv
+pip-log.txt
+
+# R (if any R tools are used)
+# ============================
+.Rhistory
+.RData
+.Rproj.user
+
+# Jupyter Notebooks (if used)
+# ============================
+.ipynb_checkpoints
+
+# Documentation
+# =============
+*.pdf.backup
+*.doc.backup
+
+# Keep these directories but ignore contents
+# ===========================================
+results/temp/*
+!results/temp/.gitkeep
+data/logs/flight_logs/*
+!data/logs/flight_logs/.gitkeep
+data/logs/reference/*
+!data/logs/reference/.gitkeep
