@@ -1,0 +1,239 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'src/**/*.m'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'README.md'
+  workflow_dispatch:
+
+jobs:
+  validate-docs:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Markdown Links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.github/markdown-link-check-config.json'
+          folder-path: 'docs/'
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v15
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+            !.git
+
+      - name: Check Documentation Coverage
+        run: |
+          echo "Checking documentation coverage..."
+
+          # Check for README in main directories
+          missing_readme=()
+
+          for dir in src/algorithms src/utils examples configs; do
+            if [ -d "$dir" ] && [ ! -f "$dir/README.md" ]; then
+              missing_readme+=("$dir")
+            fi
+          done
+
+          if [ ${#missing_readme[@]} -gt 0 ]; then
+            echo "⚠️  Missing README.md in: ${missing_readme[*]}"
+          else
+            echo "✓ All main directories have README.md"
+          fi
+
+      - name: Validate Code Examples
+        run: |
+          echo "Validating code examples in documentation..."
+
+          # Check that code blocks are properly formatted
+          docs=$(find docs -name "*.md")
+
+          for doc in $docs; do
+            echo "Checking $doc..."
+
+            # Check for unclosed code blocks
+            backticks=$(grep -c '```' "$doc" || true)
+            if [ $((backticks % 2)) -ne 0 ]; then
+              echo "❌ Unclosed code block in $doc"
+              exit 1
+            fi
+          done
+
+          echo "✓ All code blocks properly formatted"
+
+      - name: Check Image Links
+        run: |
+          echo "Checking for broken image links..."
+
+          # Find all markdown image references
+          if grep -r "!\[.*\](.*.png\|.*.jpg\|.*.gif)" docs/ README.md; then
+            echo "ℹ️  Found image references - manual verification needed"
+          else
+            echo "ℹ️  No image references found"
+          fi
+
+      - name: Spell Check
+        uses: rojopolis/spellcheck-github-actions@0.36.0
+        with:
+          config_path: .github/spellcheck-config.yml
+          task_name: Markdown
+
+  generate-api-docs:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: R2023b
+
+      - name: Generate Function Documentation
+        uses: matlab-actions/run-command@v2
+        with:
+          command: |
+            fprintf('Generating API documentation...\n');
+
+            % Create output directory
+            if ~exist('docs/api', 'dir')
+                mkdir('docs/api');
+            end
+
+            % Generate documentation for utilities
+            utilFiles = dir('src/utils/*.m');
+            apiDoc = fopen('docs/api/UTILITIES.md', 'w');
+
+            fprintf(apiDoc, '# Utility Functions API Reference\n\n');
+            fprintf(apiDoc, 'Auto-generated documentation for utility functions.\n\n');
+            fprintf(apiDoc, '---\n\n');
+
+            for i = 1:length(utilFiles)
+                if strcmp(utilFiles(i).name, 'Contents.m')
+                    continue;
+                end
+
+                filePath = fullfile(utilFiles(i).folder, utilFiles(i).name);
+                [~, funcName] = fileparts(utilFiles(i).name);
+
+                fprintf(apiDoc, '## %s\n\n', funcName);
+
+                % Get help text
+                try
+                    helpText = help(funcName);
+                    fprintf(apiDoc, '```\n%s\n```\n\n', helpText);
+                catch
+                    fprintf(apiDoc, '*No documentation available*\n\n');
+                end
+
+                fprintf(apiDoc, '**File**: `%s`\n\n', filePath);
+                fprintf(apiDoc, '---\n\n');
+            end
+
+            fclose(apiDoc);
+            fprintf('✓ API documentation generated\n');
+
+      - name: Upload API Documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: docs/api/
+
+  check-todos:
+    name: Check TODOs and FIXMEs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find TODOs
+        run: |
+          echo "Searching for TODO and FIXME comments..."
+
+          todos=$(grep -rn "TODO\|FIXME" src/ docs/ || true)
+
+          if [ -n "$todos" ]; then
+            echo "⚠️  Found TODOs/FIXMEs:"
+            echo "$todos"
+            echo ""
+            echo "Consider creating issues for these items."
+          else
+            echo "✓ No TODOs or FIXMEs found"
+          fi
+
+  verify-examples:
+    name: Verify Example Scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Examples Directory
+        run: |
+          if [ -d "examples" ]; then
+            echo "✓ Examples directory exists"
+
+            # Count example files
+            example_count=$(find examples -name "*.m" | wc -l)
+            echo "Found $example_count example scripts"
+
+            if [ $example_count -eq 0 ]; then
+              echo "⚠️  No example scripts found"
+            fi
+          else
+            echo "⚠️  No examples directory found"
+            echo "Consider adding example scripts for users"
+          fi
+
+      - name: Validate Example References
+        run: |
+          echo "Checking if examples are documented..."
+
+          if grep -q "examples" README.md; then
+            echo "✓ Examples mentioned in README"
+          else
+            echo "⚠️  Examples not mentioned in README"
+          fi
+
+  build-summary:
+    name: Documentation Build Summary
+    runs-on: ubuntu-latest
+    needs: [validate-docs, generate-api-docs, check-todos, verify-examples]
+    if: always()
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## Documentation Build Summary"
+          echo ""
+          echo "- Validate Docs: ${{ needs.validate-docs.result }}"
+          echo "- Generate API Docs: ${{ needs.generate-api-docs.result }}"
+          echo "- Check TODOs: ${{ needs.check-todos.result }}"
+          echo "- Verify Examples: ${{ needs.verify-examples.result }}"
+          echo ""
+
+          if [ "${{ needs.validate-docs.result }}" == "success" ] && \
+             [ "${{ needs.generate-api-docs.result }}" == "success" ]; then
+            echo "✓ Documentation build successful!"
+          else
+            echo "⚠️  Some documentation checks failed"
+          fi

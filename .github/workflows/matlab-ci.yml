@@ -1,0 +1,259 @@
+name: MATLAB CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  matlab-test:
+    name: MATLAB Test and Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Checkout LFS objects
+        run: git lfs pull
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: R2023b
+          products: |
+            Parallel_Computing_Toolbox
+            Optimization_Toolbox
+
+      - name: Validate MATLAB Files
+        uses: matlab-actions/run-command@v2
+        with:
+          command: |
+            % Check for syntax errors in all .m files
+            fprintf('Validating MATLAB files...\n');
+            mFiles = dir('**/*.m');
+            errors = 0;
+
+            for i = 1:length(mFiles)
+                filePath = fullfile(mFiles(i).folder, mFiles(i).name);
+                try
+                    pcode(filePath, '-inplace');
+                    delete([filePath(1:end-2) '.p']);
+                    fprintf('✓ %s\n', filePath);
+                catch ME
+                    fprintf('✗ %s: %s\n', filePath, ME.message);
+                    errors = errors + 1;
+                end
+            end
+
+            if errors > 0
+                error('Found %d files with syntax errors', errors);
+            end
+            fprintf('\n✓ All MATLAB files validated successfully!\n');
+
+      - name: Run Tests
+        uses: matlab-actions/run-tests@v2
+        with:
+          test-results-junit: test-results/results.xml
+          code-coverage-cobertura: code-coverage/coverage.xml
+          source-folder: src
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/results.xml
+
+      - name: Upload Code Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: code-coverage/coverage.xml
+
+      - name: Validate Configurations
+        uses: matlab-actions/run-command@v2
+        with:
+          command: |
+            fprintf('Validating configuration files...\n');
+            addpath('src/algorithms/iwo/IWO');
+            addpath('src/utils');
+
+            % Test default configuration
+            try
+                config = config_iwo();
+                fprintf('✓ config_iwo.m loads successfully\n');
+            catch ME
+                error('config_iwo.m failed: %s', ME.message);
+            end
+
+            % Validate configuration fields
+            requiredFields = {'nPop', 'MaxIt', 'VarMin', 'VarMax'};
+            for i = 1:length(requiredFields)
+                if ~isfield(config, requiredFields{i})
+                    error('Missing required field: %s', requiredFields{i});
+                end
+            end
+
+            fprintf('✓ Configuration validation complete!\n');
+
+      - name: Check Documentation
+        uses: matlab-actions/run-command@v2
+        with:
+          command: |
+            fprintf('Checking function documentation...\n');
+            utilFiles = dir('src/utils/*.m');
+            missing = {};
+
+            for i = 1:length(utilFiles)
+                filePath = fullfile(utilFiles(i).folder, utilFiles(i).name);
+                content = fileread(filePath);
+
+                % Check for help text
+                if ~contains(content, '%')
+                    missing{end+1} = utilFiles(i).name; %#ok<AGROW>
+                end
+            end
+
+            if ~isempty(missing)
+                warning('Files missing documentation: %s', strjoin(missing, ', '));
+            else
+                fprintf('✓ All utility functions have documentation\n');
+            end
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check File Permissions
+        run: |
+          echo "Checking for executable .m files..."
+          find . -name "*.m" -executable -type f | tee executable-files.txt
+          if [ -s executable-files.txt ]; then
+            echo "❌ Found executable MATLAB files (should not be executable):"
+            cat executable-files.txt
+            exit 1
+          else
+            echo "✓ No executable .m files found"
+          fi
+
+      - name: Check Line Endings
+        run: |
+          echo "Checking for CRLF line endings..."
+          if git ls-files --eol | grep -E 'w/crlf.*\.m$'; then
+            echo "❌ Found files with CRLF line endings"
+            exit 1
+          else
+            echo "✓ All .m files use LF line endings"
+          fi
+
+      - name: Check for Trailing Whitespace
+        run: |
+          echo "Checking for trailing whitespace..."
+          if git grep -n '[[:space:]]$' -- '*.m' '*.md'; then
+            echo "❌ Found trailing whitespace"
+            exit 1
+          else
+            echo "✓ No trailing whitespace found"
+          fi
+
+      - name: Validate Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v15
+        with:
+          globs: |
+            **/*.md
+            !node_modules
+
+      - name: Check File Sizes
+        run: |
+          echo "Checking for large files (>50MB)..."
+          large_files=$(find . -type f -size +50M -not -path "./.git/*")
+          if [ -n "$large_files" ]; then
+            echo "⚠️  Large files found (consider Git LFS):"
+            echo "$large_files"
+          else
+            echo "✓ No large files found"
+          fi
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Check for Secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-check:
+    name: Dependency Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check MATLAB Version Requirements
+        run: |
+          echo "Checking MATLAB version requirements in documentation..."
+          if grep -r "R2014b" README.md docs/; then
+            echo "✓ MATLAB R2014b+ requirement documented"
+          else
+            echo "⚠️  MATLAB version requirement not clearly documented"
+          fi
+
+      - name: Validate Toolbox Dependencies
+        run: |
+          echo "Checking for toolbox dependencies..."
+          if grep -r "parfor\|spmd\|gcp" src/; then
+            echo "ℹ️  Parallel Computing Toolbox used"
+          fi
+          if grep -r "fmincon\|ga\|particleswarm" src/; then
+            echo "ℹ️  Optimization Toolbox referenced"
+          fi
+
+  build-status:
+    name: Build Status
+    runs-on: ubuntu-latest
+    needs: [matlab-test, code-quality, security-scan, dependency-check]
+    if: always()
+
+    steps:
+      - name: Check Build Status
+        run: |
+          if [ "${{ needs.matlab-test.result }}" == "success" ] && \
+             [ "${{ needs.code-quality.result }}" == "success" ] && \
+             [ "${{ needs.security-scan.result }}" == "success" ] && \
+             [ "${{ needs.dependency-check.result }}" == "success" ]; then
+            echo "✓ All checks passed!"
+            exit 0
+          else
+            echo "❌ Some checks failed"
+            exit 1
+          fi
