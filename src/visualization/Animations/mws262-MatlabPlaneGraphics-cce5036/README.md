@@ -1,4 +1,4 @@
-This series of examples walks you through the steps to create a 3D plane animation. 
+This series of examples walks you through the steps to create a 3D plane animation.
 
 DEMO Video: https://www.youtube.com/watch?v=xHjyinJnIF8
 
