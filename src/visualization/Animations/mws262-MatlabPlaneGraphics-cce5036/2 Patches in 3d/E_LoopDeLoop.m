@@ -31,7 +31,7 @@ view(3)
 OrigVerts = p1.Vertices; %Keep track of the original vertices
 
 vel = 0.1*[0 1 0]; %Velocity vector -- in this case, we're saying that the plane always goes in the direction of its nose
-rot = angle2dcm(0,0,);
+rot = angle2dcm(0,0,0);
 
 dt = 0.5;
 center = [0 0 0]; %Keep track of the current center position of the plane.=
