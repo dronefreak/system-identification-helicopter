@@ -1,0 +1,304 @@
+name: Maintenance
+
+on:
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  stale-issues:
+    name: Mark Stale Issues
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Mark Stale Issues and PRs
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has not had
+            recent activity. It will be closed if no further activity occurs within 7 days.
+            Please comment if this is still relevant. Thank you for your contributions!
+          stale-pr-message: |
+            This pull request has been automatically marked as stale because it has not had
+            recent activity. It will be closed if no further activity occurs within 7 days.
+            Please comment if you plan to continue working on this. Thank you!
+          close-issue-message: |
+            This issue has been automatically closed due to inactivity.
+            Feel free to reopen if this is still relevant.
+          close-pr-message: |
+            This pull request has been automatically closed due to inactivity.
+            Feel free to reopen if you plan to continue working on this.
+          days-before-stale: 60
+          days-before-close: 7
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'pinned,security,bug'
+          exempt-pr-labels: 'pinned,security'
+
+  dependency-review:
+    name: Review Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check MATLAB Toolbox Dependencies
+        run: |
+          echo "## MATLAB Toolbox Dependency Report"
+          echo ""
+
+          echo "### Parallel Computing Toolbox Usage"
+          parfor_count=$(grep -r "parfor\|parpool\|gcp" src/ | wc -l || echo "0")
+          echo "References: $parfor_count"
+
+          if [ "$parfor_count" -gt 0 ]; then
+            echo "Status: Used in codebase"
+            echo "Locations:"
+            grep -rn "parfor\|parpool\|gcp" src/ || true
+          else
+            echo "Status: Not used"
+          fi
+          echo ""
+
+          echo "### Optimization Toolbox Usage"
+          opt_count=$(grep -r "fmincon\|ga\|particleswarm\|patternsearch" src/ | wc -l || echo "0")
+          echo "References: $opt_count"
+
+          if [ "$opt_count" -gt 0 ]; then
+            echo "Status: Used in codebase"
+            echo "Locations:"
+            grep -rn "fmincon\|ga\|particleswarm\|patternsearch" src/ || true
+          else
+            echo "Status: Not used"
+          fi
+
+      - name: Check External Dependencies
+        run: |
+          echo "Checking for external file dependencies..."
+
+          # Check for addpath statements
+          if grep -r "addpath" src/; then
+            echo "⚠️  Found addpath statements - review for external dependencies"
+          else
+            echo "✓ No addpath statements found"
+          fi
+
+  code-metrics:
+    name: Code Metrics
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Count Lines of Code
+        run: |
+          echo "## Code Metrics Report"
+          echo ""
+
+          echo "### MATLAB Code"
+          matlab_files=$(find src -name "*.m" | wc -l)
+          matlab_lines=$(find src -name "*.m" -exec wc -l {} + | tail -1 | awk '{print $1}')
+          echo "Files: $matlab_files"
+          echo "Lines: $matlab_lines"
+          echo ""
+
+          echo "### Documentation"
+          doc_files=$(find docs -name "*.md" | wc -l)
+          doc_lines=$(find docs -name "*.md" -exec wc -l {} + | tail -1 | awk '{print $1}' || echo "0")
+          echo "Files: $doc_files"
+          echo "Lines: $doc_lines"
+          echo ""
+
+          echo "### Breakdown by Directory"
+          for dir in src/algorithms src/utils src/models; do
+            if [ -d "$dir" ]; then
+              files=$(find "$dir" -name "*.m" | wc -l)
+              lines=$(find "$dir" -name "*.m" -exec wc -l {} + | tail -1 | awk '{print $1}' || echo "0")
+              echo "- $dir: $files files, $lines lines"
+            fi
+          done
+
+      - name: Function Complexity Analysis
+        run: |
+          echo ""
+          echo "### Function Complexity"
+          echo "Analyzing function lengths..."
+
+          find src -name "*.m" -type f | while read file; do
+            lines=$(wc -l < "$file")
+            if [ "$lines" -gt 500 ]; then
+              echo "⚠️  Large file: $file ($lines lines)"
+            fi
+          done
+
+  update-dependencies:
+    name: Update Documentation Dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for Updates
+        run: |
+          echo "Checking for documentation updates needed..."
+
+          # Check if MATLAB version in docs matches current
+          current_year=$(date +%Y)
+
+          if ! grep -q "$current_year" README.md; then
+            echo "⚠️  Copyright year may need updating in README.md"
+          fi
+
+      - name: Update Copyright Year
+        run: |
+          current_year=$(date +%Y)
+
+          # Update copyright in all markdown files
+          find . -name "*.md" -type f -exec sed -i "s/Copyright (c) [0-9]\{4\}/Copyright (c) $current_year/g" {} \; || true
+
+          # Update in MATLAB files
+          find src -name "*.m" -type f -exec sed -i "s/% Date: [0-9]\{4\}/% Date: $current_year/g" {} \; || true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update copyright year and dependencies'
+          title: 'chore: automated maintenance updates'
+          body: |
+            ## Automated Maintenance Updates
+
+            This PR contains automated updates from the maintenance workflow:
+
+            - Updated copyright years
+            - Documentation dependency checks
+            - Code metrics review
+
+            Please review and merge if appropriate.
+
+            ---
+            *This PR was automatically created by the maintenance workflow.*
+          branch: maintenance/auto-updates
+          delete-branch: true
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for Unsafe Functions
+        run: |
+          echo "Checking for potentially unsafe MATLAB functions..."
+
+          # Check for eval usage
+          if grep -rn "eval\|evalin\|evalc" src/; then
+            echo "❌ Found eval() usage - security risk!"
+            exit 1
+          else
+            echo "✓ No eval() usage found"
+          fi
+
+          # Check for system calls
+          if grep -rn "system\|unix\|dos" src/; then
+            echo "⚠️  Found system calls - review for security"
+            grep -rn "system\|unix\|dos" src/
+          else
+            echo "✓ No system calls found"
+          fi
+
+      - name: Check for Hardcoded Secrets
+        run: |
+          echo "Checking for potential hardcoded secrets..."
+
+          # Check for common secret patterns
+          if grep -rE "(password|api_key|secret|token)\s*=\s*['\"]" src/ docs/; then
+            echo "⚠️  Potential hardcoded secrets found"
+            exit 1
+          else
+            echo "✓ No obvious hardcoded secrets"
+          fi
+
+      - name: File Permission Check
+        run: |
+          echo "Checking file permissions..."
+
+          # Check for overly permissive files
+          if find . -perm -002 -type f -not -path "./.git/*"; then
+            echo "⚠️  World-writable files found"
+          else
+            echo "✓ No world-writable files"
+          fi
+
+  disk-usage:
+    name: Monitor Disk Usage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Analyze Repository Size
+        run: |
+          echo "## Repository Size Analysis"
+          echo ""
+
+          # Total size
+          total_size=$(du -sh . | cut -f1)
+          echo "Total repository size: $total_size"
+          echo ""
+
+          # Size by directory
+          echo "### Size by Directory"
+          du -h --max-depth=1 | sort -hr | head -10
+          echo ""
+
+          # Large files
+          echo "### Largest Files"
+          find . -type f -size +5M -exec ls -lh {} \; | awk '{print $9, $5}' | sort -k2 -hr | head -10
+          echo ""
+
+          # Git LFS tracking
+          echo "### Git LFS Status"
+          git lfs ls-files -s | head -10 || echo "No LFS files tracked"
+
+  health-check:
+    name: Repository Health Check
+    runs-on: ubuntu-latest
+    needs: [stale-issues, dependency-review, code-metrics, security-audit, disk-usage]
+    if: always()
+
+    steps:
+      - name: Overall Health Report
+        run: |
+          echo "## Repository Health Report"
+          echo ""
+          echo "Job Results:"
+          echo "- Stale Issues: ${{ needs.stale-issues.result }}"
+          echo "- Dependency Review: ${{ needs.dependency-review.result }}"
+          echo "- Code Metrics: ${{ needs.code-metrics.result }}"
+          echo "- Security Audit: ${{ needs.security-audit.result }}"
+          echo "- Disk Usage: ${{ needs.disk-usage.result }}"
+          echo ""
+
+          if [ "${{ needs.security-audit.result }}" == "failure" ]; then
+            echo "⚠️  Security issues detected - immediate attention required!"
+            exit 1
+          fi
+
+          echo "✓ Weekly maintenance check complete"
