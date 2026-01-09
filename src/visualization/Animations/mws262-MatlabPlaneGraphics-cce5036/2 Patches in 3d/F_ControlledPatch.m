@@ -1,5 +1,5 @@
 function F_ControlledPatch
-%{ 
+%{
 F_ControlledPatch.m
 
 Basically, the loop-de-loop example with keyboard controls.
@@ -35,12 +35,12 @@ fig.UserData.a = false;
 fig.UserData.d = false;
 fig.UserData.w = false;
 fig.UserData.s = false; %The UserData field of figure objects lets us pass whatever we want along with the figure object
-         
+
 
 camva(60); %Set the camera view angle -- more about this in the Camera folder of the example set.
 
 %% Compound Patch - columns are individual patches -- same again as example B
-pY = [-1 1 0; 
+pY = [-1 1 0;
     0 0 0]';
 pX = [-1/3 -1/3 2/3;
     -1/3 -1/3 2/3]';
@@ -68,7 +68,7 @@ tic
 told = 0;
 while(ishandle(fig)) %Loop continues until you close the window.
   tnew = toc;
-  
+
   %Check for keystroke callbacks.
   if fig.UserData.e
       rot = rot*angle2dcm(0.05,0,0); %Rotation matrix generated for whichever key is pressed
@@ -88,7 +88,7 @@ while(ishandle(fig)) %Loop continues until you close the window.
   if fig.UserData.d
       rot = rot*angle2dcm(0,0,0.05);
   end
-  
+
   %Now change the orientation/position -- same as example E
   pos = vel*(rot*forwardVec*(tnew-told))' + pos;
 
@@ -96,7 +96,7 @@ while(ishandle(fig)) %Loop continues until you close the window.
 
     told = tnew;
     pause(0.01);
-    
+
 end
 end
 
@@ -106,7 +106,7 @@ end
 function KeyPress(varargin)
      fig = varargin{1};
      key = varargin{2}.Key;
-     if strcmp(key,'e') 
+     if strcmp(key,'e')
          fig.UserData.e = true;
      elseif strcmp(key,'q')
          fig.UserData.q = true;
@@ -124,7 +124,7 @@ end
 function KeyRelease(varargin)
      fig = varargin{1};
      key = varargin{2}.Key;
-     if strcmp(key,'e') 
+     if strcmp(key,'e')
          fig.UserData.e = false;
      elseif strcmp(key,'q')
          fig.UserData.q = false;

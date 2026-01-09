@@ -1,4 +1,4 @@
-%{ 
+%{
 FigPropertiesEx.m
 
 This shows the hierarchy of plot objects in matlab and what sorts of
@@ -30,24 +30,24 @@ sampleSurf = surf(linspace(-1,1,size(sampleData,1)),linspace(-1,1,size(sampleDat
 
                     %Older - must use set/get
     set(fig,'Position',[200 100 400 400]);
-    
-    
-    
+
+
+
 %2. Axes properties -- view, axis, camera properties
     input('Press enter to see example Axis object properties change')
     axis1 = fig.Children;
     get(axis1);
-    
+
     axis1.GridLineStyle = 'none'; %ex: make the grid lines more transparent
-    
-    
+
+
 %3. Plot/surf/patch...  properties - Alter your data and how it looks
     input('Press enter to see example Plot/Surface object properties change')
     get(sampleSurf) %sampleSurf is also fig.Children.Children
-    
+
     %Alter data - Faster than plot,plot,plot...
     sampleSurf.ZData(50,10) = 1;
-    
+
     %Alter the look:
     sampleSurf.LineStyle = 'none';
     sampleSurf.FaceAlpha = 0.5;
@@ -55,10 +55,10 @@ sampleSurf = surf(linspace(-1,1,size(sampleData,1)),linspace(-1,1,size(sampleDat
 
 
 
-    
-    
-    
-    
+
+
+
+
 
 
 

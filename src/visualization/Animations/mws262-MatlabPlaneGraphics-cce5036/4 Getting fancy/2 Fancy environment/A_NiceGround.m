@@ -1,4 +1,4 @@
-%{ 
+%{
 A_NiceGround.m
 
 Use a surface as the ground. Give it a texture and some shadows.

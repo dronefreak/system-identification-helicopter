@@ -1,5 +1,5 @@
 function FinalEx
-%{ 
+%{
 FinalEx.m
 
 WASDQE for steering. V to switch to 1st person view. More below.
@@ -80,7 +80,7 @@ set(fig,'WindowKeyPressFcn',@KeyPress,'WindowKeyReleaseFcn', @KeyRelease);
          fig.UserData.d = false;
          fig.UserData.w = false;
          fig.UserData.s = false;
-         
+
 
 
 forwardVec = [1 0 0]'; %Vector of the plane's forward direction in plane frame
@@ -97,7 +97,7 @@ tic
 told = 0;
 while(ishandle(fig))
   tnew = toc;
-  
+
   %Check for user inputs:
   if fig.UserData.e
       rot = rot*angle2dcm(0.05,0,0);
@@ -117,17 +117,17 @@ while(ishandle(fig))
   if fig.UserData.d
       rot = rot*angle2dcm(0,0,0.05);
   end
-  
+
   %Update plane's center position.
   pos = vel*(rot*forwardVec*(tnew-told))' + pos;
-  
+
   %If the plane wants to go under the ground, then bring it back up to the
   %ground surface.
   nearestGroundZ = interp2(groundSurf.XData,groundSurf.YData,groundSurf.ZData,pos(1),pos(2));
   if pos(3)<nearestGroundZ
       pos(3) = nearestGroundZ;
   end
-  
+
   if resetPositionOnBounds
       % If we leave the ground area in the X direction, then snap the plane
       % back to the other side.
@@ -145,23 +145,23 @@ while(ishandle(fig))
           pos(2) = max(groundSurf.YData);
       end
   end
-  
+
   %Update the plane's vertices using the new position and rotation
   p1.Vertices = (rot*vert')' + repmat(pos,[size(vert,1),1]);
-  
-  
+
+
   %Camera updates:
   if fig.UserData.firstPerson %First person view -- follow the plane from slightly behind.
       camupvec = rot*[0 0 1]';
       camup(camupvec);
       campos(pos' - 1000*rot*[1 0 -0.25]');
-      camtarget(pos' + 100*rot*[1 0 0]');    
+      camtarget(pos' + 100*rot*[1 0 0]');
   else %Follow the plane from a fixed angle
     campos(pos + [-3000,3000,1000]);%3000*abs(pos-campos)/norm(pos-campos));
     camtarget(pos);
 
   end
-  
+
      cam = campos;
     %Also keep the camera from going into the ground (could be done a
     %smarter way to also not look through the ground).
@@ -169,10 +169,10 @@ while(ishandle(fig))
      if cam(3)<nearestGroundZ
       	campos([cam(1),cam(2),nearestGroundZ]);
      end
-  
+
     told = tnew;
     pause(0.01);
-    
+
 end
 end
 
@@ -180,7 +180,7 @@ end
 function KeyPress(varargin)
      fig = varargin{1};
      key = varargin{2}.Key;
-     if strcmp(key,'e') 
+     if strcmp(key,'e')
          fig.UserData.e = true;
      elseif strcmp(key,'q')
          fig.UserData.q = true;
@@ -200,7 +200,7 @@ end
 function KeyRelease(varargin)
      fig = varargin{1};
      key = varargin{2}.Key;
-     if strcmp(key,'e') 
+     if strcmp(key,'e')
          fig.UserData.e = false;
      elseif strcmp(key,'q')
          fig.UserData.q = false;

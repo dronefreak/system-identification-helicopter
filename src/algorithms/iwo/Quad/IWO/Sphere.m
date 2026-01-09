@@ -12,13 +12,13 @@ Lq=x(5,1);
 Lr=x(6,1);
 
 %------------Declaring Matrices--------------------------------------------
-A=[-Lu 0 0 0 1 0  0 Lp     
-   0 -Lv 0 1 0 0 Lp  0    
-   0 0 -Lw 0 0 0 0 0    
-   0 0 0 -Lp 0 0 0 0     
-   0 0 0 0 -Lq 0 0 0     
-   0 0 0 0 0 -Lr 0 0     
-   0 0 0 1 0 0 0 0 
+A=[-Lu 0 0 0 1 0  0 Lp
+   0 -Lv 0 1 0 0 Lp  0
+   0 0 -Lw 0 0 0 0 0
+   0 0 0 -Lp 0 0 0 0
+   0 0 0 0 -Lq 0 0 0
+   0 0 0 0 0 -Lr 0 0
+   0 0 0 1 0 0 0 0
    0 0 0 0 1 0 0 0  ];
 
 B=[0       0       0       0
@@ -42,20 +42,20 @@ mod=ss(A,B,C,D);
 %  z=z+ goodnessOfFit(test_out(:,i),out_data(:,i),'MSE');
 %      %z=z + sum(abs(out_data(:,i)-test_out(:,i)));
 %  end
-%  
+%
 %  if isreal(z)
 %  else
 %      z=inf;
 %  end
-%  
-     
- 
- 
- 
- 
- 
- 
-%  
+%
+
+
+
+
+
+
+
+%
 %  cor1=sum(abs(y(:,1,1)-ou(:,1)));
 %  cor2=sum(abs(y(:,2,1)-ou(:,2)));
 %  cor3=sum(abs(y(:,3,1)-ou(:,3)));
@@ -66,7 +66,7 @@ mod=ss(A,B,C,D);
 %  cor8=sum(abs(y(:,8,1)-ou(:,8)));
 %  cor9=sum(abs(y(:,9,1)-ou(:,9)));
 %  cor10=sum(abs(y(:,10,1)-ou(:,10)));
-%  
+%
 %  d1=cor1;
 %  d2=cor2;
 %  d3=cor3;
@@ -77,12 +77,12 @@ mod=ss(A,B,C,D);
 %  d8=sqrt(sqrt(cor8));
 %  d9=(cor9);
 %  d10=cor10;
-%  
+%
 %  fit=abs((d1+d2+d3+d4+d5+d6+d7+d8+d9+d10));
 %     if isnan(fit)
 %         fit=1000000000;
 %     end
-%     
+%
  cor1=corrcoef(y(:,1,1),ou(:,1));
  cor2=corrcoef(y(:,2,1),ou(:,2));
  cor3=corrcoef(y(:,3,1),ou(:,3));
@@ -91,7 +91,7 @@ mod=ss(A,B,C,D);
  cor6=corrcoef(y(:,6,1),ou(:,6));
  cor7=corrcoef(y(:,7,1),ou(:,7));
  cor8=corrcoef(y(:,8,1),ou(:,8));
- 
+
  d1=abs(cor1(1,2));
  d2=abs(cor2(1,2));
  d3=abs(cor3(1,2));
@@ -100,7 +100,7 @@ mod=ss(A,B,C,D);
  d6=abs(cor6(1,2));
  d7=abs(cor7(1,2));
  d8=abs(cor8(1,2));
- 
+
 cor= d1+d2+d3+d4+d5+d6+d7+d8;
 if isreal(cor)
   z=8-cor;
@@ -109,8 +109,8 @@ end
         z=Inf;
     end
 
- 
-  
+
+
 
 
 end

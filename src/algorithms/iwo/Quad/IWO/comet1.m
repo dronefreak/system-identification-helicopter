@@ -54,14 +54,14 @@ head = line('parent',ax,'color',colors(1,:),'marker','o','linestyle','none', ...
             'xdata',x(1),'ydata',y(1),'Tag','head');
 if matlab.graphics.internal.isGraphicsVersion1
     % GraphicsVersion1 implementation %
-    
+
     % Choose first three colors for head, body, and tail
     set(head,'erase','xor');
     body = line('parent',ax,'color',colors(2,:),'linestyle',lstyle,'erase','none', ...
         'xdata',[],'ydata',[],'tag','body');
     tail = line('parent',ax,'color',colors(3,:),'linestyle','-','erase','none', ...
         'xdata',[],'ydata',[],'tag','tail');
-    
+
     % This try/catch block allows the user to close the figure gracefully
     % during the comet animation.
     try
@@ -73,7 +73,7 @@ if matlab.graphics.internal.isGraphicsVersion1
             drawnow
             pause(d)
         end
-        
+
         % Primary loop
         for i = k+2:m
             j = i-1:i;
@@ -83,7 +83,7 @@ if matlab.graphics.internal.isGraphicsVersion1
             drawnow
             pause(d)
         end
-        
+
         % Clean up the tail
         for i = m+1:m+k
             j = i-1:i;
@@ -96,8 +96,8 @@ if matlab.graphics.internal.isGraphicsVersion1
             rethrow(E);
         end
     end
-    
-    
+
+
 else
     % ~GraphicsVersion1 implementation
     body = matlab.graphics.animation.AnimatedLine('color',colors(2,:),...
@@ -108,13 +108,13 @@ else
         'linestyle','-',...
         'Parent',ax,...
         'MaximumNumPoints',1+m,'tag','tail'); %Add 1 for any extra points
-    
+
     if ( length(x) < 2000 )
         updateFcn = @()drawnow;
     else
         updateFcn = @()drawnow('update');
     end
-    
+
     % Grow the body
     for i = 1:k
         set(head,'xdata',x(i),'ydata',y(i));
@@ -124,7 +124,7 @@ else
         addpoints(body,x(i),y(i));
         updateFcn();
         pause(d);
-        
+
     end
     % Add a drawnow to capture any events / callbacks
     drawnow;

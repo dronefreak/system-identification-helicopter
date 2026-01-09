@@ -1,4 +1,4 @@
-%{ 
+%{
 B_NiceHorizon.m
 
 Same stuff as before, now add a horizon.
@@ -57,14 +57,14 @@ camva(40)
 for i = 1:500
     campos(angle2dcm(0.01*i,0,0)*origPos);
     pause(0.01);
-    
+
 end
 
 %look up a bit
 for i = 1:500
     camtarget(origTarget+[0 0 20]*i);
     pause(0.01);
-    
+
 end
 
 %"fly" forward
@@ -73,7 +73,7 @@ for i = 1:500
     camtarget(camtarget + 0.01*dir);
     campos(campos + 0.01*dir)
     pause(0.01);
-    
+
 end
 
 

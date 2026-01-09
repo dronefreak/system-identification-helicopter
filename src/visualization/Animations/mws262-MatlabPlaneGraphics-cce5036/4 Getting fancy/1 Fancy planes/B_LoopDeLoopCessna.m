@@ -1,4 +1,4 @@
-%{ 
+%{
 B_LoopDeLoopCessna.m
 
 This simply shows how the imported cessna patch object in A can be plugged directly into
@@ -39,6 +39,6 @@ for i = 1:1000
     totalRot = totalRot*rot;
     center = dt*(totalRot*vel')' + center; %transform the velocity, keep track of the center position.
     p1.Vertices = (totalRot*OrigVerts')' + repmat(center,[size(OrigVerts,1),1]); %Rotate the patch object about its center and add new center point.
-   
-    pause(0.01); 
+
+    pause(0.01);
 end

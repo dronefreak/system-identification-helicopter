@@ -1,4 +1,4 @@
-%{ 
+%{
 C_RotatePatches.m
 
 Show how patch objects can be rotated using rotation matrices. Note that
@@ -13,7 +13,7 @@ fig = figure;
 
 %% Same code as C_CompoundPatch.m
 %Compound Patch - columns are individual patches
-pX = [-1 1 0; 
+pX = [-1 1 0;
     0 0 0]';
 pY = [-1/3 -1/3 2/3;
     -1/3 -1/3 2/3]';

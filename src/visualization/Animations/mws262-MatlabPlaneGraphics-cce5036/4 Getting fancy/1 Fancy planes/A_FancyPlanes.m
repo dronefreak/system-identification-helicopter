@@ -1,4 +1,4 @@
-%{ 
+%{
 A_FancyPlanes.m
 
 Import 3d models as patch objects. After importing, they can be used just
