@@ -1,4 +1,4 @@
-%{ 
+%{
 A_CamMotion.m
 
 Animate several camera motions around a surface.
@@ -40,14 +40,14 @@ camva(40); %Set the camera view angle. -- VERY IMPORTANT. By default, this numbe
 %circle around the origin.
 for i = 1:500
     campos(angle2dcm(0.01*i,0,0)*origPos);
-    pause(0.01); 
+    pause(0.01);
 end
 
 %look up a bit - leave the camera position the same, but change the target
 %upwards
 for i = 1:500
     camtarget(origTarget+[0 0 20]*i);
-    pause(0.01);  
+    pause(0.01);
 end
 
 %"fly" forward - Translate both the target and the position of the camera
@@ -56,5 +56,5 @@ dir = camtarget - campos; %The direction we're going to move the camera.
 for i = 1:500
     camtarget(camtarget + 0.01*dir);
     campos(campos + 0.01*dir)
-    pause(0.01);  
+    pause(0.01);
 end

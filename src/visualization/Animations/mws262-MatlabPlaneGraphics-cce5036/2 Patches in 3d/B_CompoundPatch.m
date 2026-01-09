@@ -1,7 +1,7 @@
-%{ 
+%{
 B_CompoundPatch.m
 
-Create a multi-faced patch (sort of paper airplane-ish). 
+Create a multi-faced patch (sort of paper airplane-ish).
 
 Matt Sheen, mws262@cornell.edu
 %}
@@ -11,7 +11,7 @@ fig = figure;
 
 %Compound Patch - columns are individual patches, rows are vertices of that
 %patch
-pX = [-1 1 0; 
+pX = [-1 1 0;
     0 0 0]';
 pY = [-1/3 -1/3 2/3;
     -1/3 -1/3 2/3]';

@@ -5,9 +5,9 @@
 % Project Code: YPEA113
 % Project Title: Biogeography-Based Optimization (BBO) in MATLAB
 % Publisher: Yarpiz (www.yarpiz.com)
-% 
+%
 % Developer: S. Mostapha Kalami Heris (Member of Yarpiz Team)
-% 
+%
 % Contact Info: sm.kalami@gmail.com, info@yarpiz.com
 %
 

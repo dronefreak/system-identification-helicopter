@@ -83,4 +83,3 @@ function [modchrom1,modchrom2]=Chiasma(ChromA,ChromB)
     modchrom2=[A2,B2,C2,0];
     
  
-    

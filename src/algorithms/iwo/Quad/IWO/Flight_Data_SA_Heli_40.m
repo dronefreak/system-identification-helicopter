@@ -91,7 +91,7 @@ output = [f_u f_v f_p f_q f_phi f_theta f_w f_r];
 % % f_d_ped = RC_rs(:,5);
 % % f_d_col = RC_rs(:,7);
 % % input=[f_d_lat f_d_lon f_d_ped f_d_col];
-% % 
+% %
 % % f_u = LPOS_rs(:,8);
 % % f_v = LPOS_rs(:,7);
 % % half_power_bw_p = powerbw(ATT_rs(:,9),Fs);

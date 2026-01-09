@@ -1,13 +1,13 @@
 % PSO : Particle Swarm Optimization (VECTORIZED)
-% particle swarm optimization (PSO) is a computational method that 
-% optimizes a problem by iteratively trying to improve a candidate 
-% solution with regard to a given measure of quality. PSO optimizes 
-% a problem by having a population of candidate solutions, here dubbed 
-% particles, and moving these particles around in the search-space 
-% according to simple mathematical formulae over the particle's position 
-% and velocity. Each particle's movement is influenced by its local best 
-% known position but, is also guided toward the best known positions 
-% in the search-space, which are updated as better positions are found 
+% particle swarm optimization (PSO) is a computational method that
+% optimizes a problem by iteratively trying to improve a candidate
+% solution with regard to a given measure of quality. PSO optimizes
+% a problem by having a population of candidate solutions, here dubbed
+% particles, and moving these particles around in the search-space
+% according to simple mathematical formulae over the particle's position
+% and velocity. Each particle's movement is influenced by its local best
+% known position but, is also guided toward the best known positions
+% in the search-space, which are updated as better positions are found
 % by other particles. This is expected to move the swarm toward the best solutions.
 %
 % this function is written as a simple example of PSO
@@ -46,7 +46,7 @@ for iter = 1:maxIter
     x = swarm(:, 1, 1);                                         % get the updated position
     y = swarm(:, 1, 2);                                         % updated position
     fval = objfcn([x y]);                                       % evaluate the function using the position of the particle
-    
+
     % compare the function values to find the best ones
     for ii = 1:swarm_size
         if fval(ii,1) < swarm(ii,4,1)
@@ -55,15 +55,15 @@ for iter = 1:maxIter
             swarm(ii, 4, 1) = fval(ii,1);                       % update the best value so far
         end
     end
-    
+
     [~, gbest] = min(swarm(:, 4, 1));                           % find the best function value in total
-    
+
     % update the velocity of the particles
     swarm(:, 2, 1) = inertia*(rand(swarm_size,1).*swarm(:, 2, 1)) + correction_factor*(rand(swarm_size,1).*(swarm(:, 3, 1) ...
         - swarm(:, 1, 1))) + correction_factor*(rand(swarm_size,1).*(swarm(gbest, 3, 1) - swarm(:, 1, 1)));   %x velocity component
     swarm(:, 2, 2) = inertia*(rand(swarm_size,1).*swarm(:, 2, 2)) + correction_factor*(rand(swarm_size,1).*(swarm(:, 3, 2) ...
         - swarm(:, 1, 2))) + correction_factor*(rand(swarm_size,1).*(swarm(gbest, 3, 2) - swarm(:, 1, 2)));   %y velocity component
-    
+
     % plot the particles
     clf;plot(swarm(:, 1, 1), swarm(:, 1, 2), 'bx');             % drawing swarm movements
     axis([-2 40 -2 40]);

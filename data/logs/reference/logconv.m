@@ -30,6 +30,9 @@ fconv_gpsalt=1; %[mm] to [m]
 fconv_gpslatlong=1; %[gps_raw_position_unit] to [deg]
 fconv_timestamp=1E-6; % [microseconds] to [seconds]
 
+% Initialize sysvector for nested function access
+sysvector = struct();
+
 % ************************************************************************
 % Import the PX4 logs
 % ************************************************************************
@@ -73,14 +76,14 @@ DrawCurrentAircraftState();
 %  IMPORTPX4LOGDATA (nested function)
 %  ************************************************************************
 %  Attention:  This is the import routine for firmware from ca. 03/2013.
-%              Other firmware versions might require different import 
+%              Other firmware versions might require different import
 %              routines.
 
 %% ************************************************************************
 %  IMPORTPX4LOGDATA (nested function)
 %  ************************************************************************
 %  Attention:  This is the import routine for firmware from ca. 03/2013.
-%              Other firmware versions might require different import 
+%              Other firmware versions might require different import
 %              routines.
 
 function ImportPX4LogData()
@@ -89,7 +92,7 @@ function ImportPX4LogData()
     % RETRIEVE SYSTEM VECTOR
     % *************************************************************************
     % //All measurements in NED frame
-    
+
     % Convert to CSV
     %arg1 = 'log-fx61-20130721-2.bin';
     arg1 = filePath;
@@ -97,7 +100,7 @@ function ImportPX4LogData()
     time_field = 'TIME';
     data_file = 'data.csv';
     csv_null = '';
-    
+
     if not(exist(data_file, 'file'))
         s = system( sprintf('python sdlog2_dump.py "%s" -f "%s" -t"%s" -d"%s" -n"%s"', arg1, data_file, time_field, delim, csv_null) );
     end
@@ -112,7 +115,7 @@ function ImportPX4LogData()
         time_s = uint64(time_us*1e-6);
         time_m = uint64(time_s/60);
         time_s = time_s - time_m * 60;
-        
+
         disp([sprintf('Flight log duration: %d:%d (minutes:seconds)', time_m, time_s)]);
 
         disp(['logfile conversion finished.' char(10)]);
@@ -135,14 +138,14 @@ function InitControlGUI()
     dsliders=200;
     dedits=80;
     hslider=20;
-        
+
     hpanel1=40; %panel1
     hpanel2=220;%panel2
     hpanel3=3*hslider+4*dxy+3*dxy;%panel3.
-    
+
     width=dlabels+dsliders+dedits+4*dxy+2*dxy;  %figure width
     height=hpanel1+hpanel2+hpanel3+4*dxy;       %figure height
-        
+
     %**********************************************************************
     % Create GUI
     %**********************************************************************
@@ -150,7 +153,7 @@ function InitControlGUI()
     h.guistatepanel=uipanel('Title','Current GUI state','Units','pixels','Position',[dxy dxy width-2*dxy hpanel1],'parent',h.figures(1));
     h.aircraftstatepanel=uipanel('Title','Current aircraft state','Units','pixels','Position',[dxy hpanel1+2*dxy width-2*dxy hpanel2],'parent',h.figures(1));
     h.plotctrlpanel=uipanel('Title','Plot Control','Units','pixels','Position',[dxy hpanel1+hpanel2+3*dxy width-2*dxy hpanel3],'parent',h.figures(1));
-    
+
     %%Control GUI-elements
     %Slider: Current time
     h.labels.CurTime=uicontrol(gcf,'style','text','Position',[dxy dxy dlabels hslider],'String','Current time t[s]:','parent',h.plotctrlpanel,'HorizontalAlignment','left');
@@ -167,7 +170,7 @@ function InitControlGUI()
         'min',mintime_log,'max',maxtime_log,'value',maxtime,'callback',@minmaxtime_callback,'parent',h.plotctrlpanel);
     h.edits.MaxTime=uicontrol(gcf,'style','edit','position',[3*dxy+dlabels+dsliders 2*dxy+hslider dedits hslider],'String',get(h.sliders.MaxTime,'value'),...
         'BackgroundColor','white','callback',@minmaxtime_callback,'parent',h.plotctrlpanel);
-    
+
     %Slider: MinTime
     h.labels.MinTime=uicontrol(gcf,'style','text','position',[dxy 3*dxy+2*hslider dlabels hslider],'String','Min. time t[s] to dispay :','parent',h.plotctrlpanel,'HorizontalAlignment','left');
     h.sliders.MinTime=uicontrol(gcf,'style','slider','units','pix','position',[2*dxy+dlabels 3*dxy+2*hslider dsliders hslider],...
@@ -178,23 +181,23 @@ function InitControlGUI()
     %%Current data/state GUI-elements (Multiline-edit-box)
     h.edits.AircraftState=uicontrol(gcf,'style','edit','Units','normalized','position',[.02 .02 0.96 0.96],'Min',1,'Max',10,'String','This shows the current aircraft state',...
                                     'HorizontalAlignment','left','parent',h.aircraftstatepanel);
-    
+
     h.labels.GUIState=uicontrol(gcf,'style','text','Units','pixels','position',[dxy dxy width-4*dxy hslider],'String','Current state of this GUI',...
                                 'HorizontalAlignment','left','parent',h.guistatepanel);
-    
+
 end
 
 %% ************************************************************************
 %  INITPLOTGUI (nested function)
 %  ************************************************************************
 function InitPlotGUI()
-    
+
     % Setup handles to lines and text
     h.markertext=[];
     templinehandle=0.0;%line([0 1],[0 5]);   % Just a temporary handle to init array
     h.markerline(1:NrAxes)=templinehandle;   % the actual handle-array to the lines  - these are numbered consecutively
     h.markerline(1:NrAxes)=0.0;
-        
+
     % Setup all other figures and axes for plotting
     %  PLOT WINDOW 1: GPS POSITION
     h.figures(2)=figure('units','normalized','Toolbar','figure', 'Name', 'GPS Position');
@@ -208,7 +211,7 @@ function InitPlotGUI()
     h.axes(4)=subplot(4,1,3);
     h.axes(5)=subplot(4,1,4);
     set(h.axes(2:5),'Parent',h.figures(3));
-    
+
     %  PLOT WINDOW 3: ATTITUDE ESTIMATE, ACTUATORS/CONTROLS, AIRSPEEDS,...
     h.figures(4)=figure('Name', 'Attitude Estimate / Actuators / Airspeeds');
     h.axes(6)=subplot(4,1,1);
@@ -216,12 +219,12 @@ function InitPlotGUI()
     h.axes(8)=subplot(4,1,3);
     h.axes(9)=subplot(4,1,4);
     set(h.axes(6:9),'Parent',h.figures(4));
-    
+
     %  PLOT WINDOW 4: LOG STATS
     h.figures(5) = figure('Name', 'Log Statistics');
     h.axes(10)=subplot(1,1,1);
     set(h.axes(10:10),'Parent',h.figures(5));
-    
+
 end
 
 %% ************************************************************************
@@ -229,7 +232,7 @@ end
 %  ************************************************************************
 %Draws the raw data from the sysvector, but does not add any
 %marker-lines or so
-function DrawRawData() 
+function DrawRawData()
     % ************************************************************************
     %  PLOT WINDOW 1: GPS POSITION & GUI
     %  ************************************************************************
@@ -245,7 +248,7 @@ function DrawRawData()
         ylabel(h.axes(1),'Longitude [deg]');
         zlabel(h.axes(1),'Altitude above MSL [m]');
         grid on
-        
+
         %Reset path
         h.pathpoints=0;
     end
@@ -258,7 +261,7 @@ function DrawRawData()
     title(h.axes(2),'Magnetometers [Gauss]');
     legend(h.axes(2),'x','y','z');
     plot(h.axes(3),time(imintime:imaxtime),[sysvector.IMU_AccX(imintime:imaxtime), sysvector.IMU_AccY(imintime:imaxtime), sysvector.IMU_AccZ(imintime:imaxtime)]);
-    title(h.axes(3),'Accelerometers [m/s²]');
+    title(h.axes(3),'Accelerometers [m/sï¿½]');
     legend(h.axes(3),'x','y','z');
     plot(h.axes(4),time(imintime:imaxtime),[sysvector.IMU_GyroX(imintime:imaxtime), sysvector.IMU_GyroY(imintime:imaxtime), sysvector.IMU_GyroZ(imintime:imaxtime)]);
     title(h.axes(4),'Gyroscopes [rad/s]');
@@ -288,7 +291,7 @@ function DrawRawData()
     legend(h.axes(7),'ATT CTRL Roll [-1..+1]','ATT CTRL Pitch [-1..+1]','ATT CTRL Yaw [-1..+1]','ATT CTRL Thrust [0..+1]');
     %Actuator Controls
     plot(h.axes(8),time(imintime:imaxtime), [sysvector.OUT0_Out0(imintime:imaxtime), sysvector.OUT0_Out1(imintime:imaxtime), sysvector.OUT0_Out2(imintime:imaxtime), sysvector.OUT0_Out3(imintime:imaxtime), sysvector.OUT0_Out4(imintime:imaxtime), sysvector.OUT0_Out5(imintime:imaxtime), sysvector.OUT0_Out6(imintime:imaxtime), sysvector.OUT0_Out7(imintime:imaxtime)]);
-    title(h.axes(8),'Actuator PWM (raw-)outputs [µs]');
+    title(h.axes(8),'Actuator PWM (raw-)outputs [ï¿½s]');
     legend(h.axes(8),'CH1','CH2','CH3','CH4','CH5','CH6','CH7','CH8');
     set(h.axes(8), 'YLim',[800 2200]);
     %Airspeeds
@@ -310,7 +313,7 @@ function DrawRawData()
     for i=2:NrAxes
         set(h.axes(i),'XLim',[mintime maxtime]);
     end
-    
+
     set(h.labels.GUIState,'String','OK','BackgroundColor',[240/255 240/255 240/255]);
 end
 
@@ -318,19 +321,19 @@ end
 %  DRAWCURRENTAIRCRAFTSTATE(nested function)
 %  ************************************************************************
 function DrawCurrentAircraftState()
-    %find current data index        
+    %find current data index
     i=find(time>=CurTime,1,'first');
 
     %**********************************************************************
     % Current aircraft state label update
     %**********************************************************************
-    acstate{1,:}=[sprintf('%s \t\t','GPS Pos:'),'[lat=',num2str(double(sysvector.GPS_Lat(i))*fconv_gpslatlong),'°, ',...
-                        'lon=',num2str(double(sysvector.GPS_Lon(i))*fconv_gpslatlong),'°, ',...
+    acstate{1,:}=[sprintf('%s \t\t','GPS Pos:'),'[lat=',num2str(double(sysvector.GPS_Lat(i))*fconv_gpslatlong),'ï¿½, ',...
+                        'lon=',num2str(double(sysvector.GPS_Lon(i))*fconv_gpslatlong),'ï¿½, ',...
                         'alt=',num2str(double(sysvector.GPS_Alt(i))*fconv_gpsalt),'m]'];
     acstate{2,:}=[sprintf('%s \t\t','Mags[gauss]'),'[x=',num2str(sysvector.IMU_MagX(i)),...
                                ', y=',num2str(sysvector.IMU_MagY(i)),...
                                ', z=',num2str(sysvector.IMU_MagZ(i)),']'];
-    acstate{3,:}=[sprintf('%s \t\t','Accels[m/s²]'),'[x=',num2str(sysvector.IMU_AccX(i)),...
+    acstate{3,:}=[sprintf('%s \t\t','Accels[m/sï¿½]'),'[x=',num2str(sysvector.IMU_AccX(i)),...
                                ', y=',num2str(sysvector.IMU_AccY(i)),...
                                ', z=',num2str(sysvector.IMU_AccZ(i)),']'];
     acstate{4,:}=[sprintf('%s \t\t','Gyros[rad/s]'),'[x=',num2str(sysvector.IMU_GyroX(i)),...
@@ -348,7 +351,7 @@ function DrawCurrentAircraftState()
     acstate{7,:}=[acstate{7,:},num2str(sysvector.ATTC_Thrust(i)),','];
     %end
     acstate{7,:}=[acstate{7,:},']'];
-    acstate{8,:}=sprintf('%s \t[','Actuator Outputs [PWM/µs]:');
+    acstate{8,:}=sprintf('%s \t[','Actuator Outputs [PWM/ï¿½s]:');
     %for j=1:8
     acstate{8,:}=[acstate{8,:},num2str(sysvector.OUT0_Out0(i)),','];
     acstate{8,:}=[acstate{8,:},num2str(sysvector.OUT0_Out1(i)),','];
@@ -361,9 +364,9 @@ function DrawCurrentAircraftState()
     %end
     acstate{8,:}=[acstate{8,:},']'];
     acstate{9,:}=[sprintf('%s \t','Airspeed[m/s]:'),'[IAS: ',num2str(sysvector.AIRS_IndSpeed(i)),', TAS: ',num2str(sysvector.AIRS_TrueSpeed(i)),']'];
-    
+
     set(h.edits.AircraftState,'String',acstate);
-    
+
     %**********************************************************************
     % GPS Plot Update
     %**********************************************************************
@@ -373,29 +376,29 @@ function DrawCurrentAircraftState()
     if(CurTime>mintime+1) %the +1 is only a small bugfix
         h.pathline=plot3(h.axes(1),double(sysvector.GPS_Lat(imintime:i))*fconv_gpslatlong, ...
                                     double(sysvector.GPS_Lon(imintime:i))*fconv_gpslatlong, ...
-                                    double(sysvector.GPS_Alt(imintime:i))*fconv_gpsalt,'b','LineWidth',2); 
+                                    double(sysvector.GPS_Alt(imintime:i))*fconv_gpsalt,'b','LineWidth',2);
     end;
     hold off
     %Plot current position
     newpoint=[double(sysvector.GPS_Lat(i))*fconv_gpslatlong double(sysvector.GPS_Lat(i))*fconv_gpslatlong double(sysvector.GPS_Alt(i))*fconv_gpsalt];
     if(numel(h.pathpoints)<=3) %empty path
         h.pathpoints(1,1:3)=newpoint;
-    else %Not empty, append new point 
+    else %Not empty, append new point
         h.pathpoints(size(h.pathpoints,1)+1,:)=newpoint;
     end
-    axes(h.axes(1));    
+    axes(h.axes(1));
     line(h.pathpoints(:,1),h.pathpoints(:,2),h.pathpoints(:,3),'LineStyle','none','Marker','.','MarkerEdge','black','MarkerSize',20);
-    
-    
-    % Plot current time (small label next to current gps position) 
+
+
+    % Plot current time (small label next to current gps position)
     textdesc=strcat('  t=',num2str(time(i)),'s');
     if(isvalidhandle(h.markertext))
             delete(h.markertext); %delete old text
-    end 
+    end
     h.markertext=text(double(sysvector.GPS_Lat(i))*fconv_gpslatlong,double(sysvector.GPS_Lon(i))*fconv_gpslatlong,...
                         double(sysvector.GPS_Alt(i))*fconv_gpsalt,textdesc);
     set(h.edits.CurTime,'String',CurTime);
-        
+
     %**********************************************************************
     % Plot the lines showing the current time in the 2-d plots
     %**********************************************************************
@@ -405,14 +408,14 @@ function DrawCurrentAircraftState()
         h.markerline(i)=line([CurTime CurTime] ,get(h.axes(i),'YLim'),'Color','black');
         set(h.markerline(i),'parent',h.axes(i));
     end
-    
+
     set(h.labels.GUIState,'String','OK','BackgroundColor',[240/255 240/255 240/255]);
 end
 
 %% ************************************************************************
 %  MINMAXTIME CALLBACK (nested function)
 %  ************************************************************************
-function minmaxtime_callback(~,~) 
+function minmaxtime_callback(~,~)
     new_mintime=get(h.sliders.MinTime,'Value');
     new_maxtime=get(h.sliders.MaxTime,'Value');
 
@@ -452,7 +455,7 @@ function minmaxtime_callback(~,~)
     set(h.sliders.CurTime,'Value',CurTime);
     set(h.sliders.CurTime,'Max',maxtime);
     set(h.sliders.CurTime,'Min',mintime);
-    temp=get(h.sliders.CurTime,'Max')-get(h.sliders.CurTime,'Min'); 
+    temp=get(h.sliders.CurTime,'Max')-get(h.sliders.CurTime,'Min');
     set(h.sliders.CurTime,'SliderStep',[1.0/temp 5.0/temp]);  %Set Stepsize to constant [in seconds]
 
     %update edit fields
@@ -470,7 +473,7 @@ end
 %% ************************************************************************
 %  CURTIME CALLBACK (nested function)
 %  ************************************************************************
-function curtime_callback(hObj,~) 
+function curtime_callback(hObj,~)
     %find current time
     if(hObj==h.sliders.CurTime)
         CurTime=get(h.sliders.CurTime,'Value');
@@ -484,12 +487,12 @@ function curtime_callback(hObj,~)
         end
     else
         %Error
-        set(h.labels.GUIState,'String','Error: curtime_callback','BackgroundColor','red');        
+        set(h.labels.GUIState,'String','Error: curtime_callback','BackgroundColor','red');
     end
-    
+
     set(h.sliders.CurTime,'Value',CurTime);
     set(h.edits.CurTime,'String',num2str(CurTime));
-    
+
     %Redraw time markers, but don't have to redraw the whole raw data
     DrawCurrentAircraftState();
 end
@@ -505,7 +508,7 @@ function [idxmin,idxmax] = FindMinMaxTimeIndices()
         if maxtime==0; idxmax=size(sysvector.TIME_StartTime,1); break; end
         if time(i)>=maxtime; idxmax=i; break; end
     end
-    mintime=time(idxmin); 
+    mintime=time(idxmin);
     maxtime=time(idxmax);
 end
 
@@ -513,7 +516,7 @@ end
 %  ISVALIDHANDLE (nested function)
 %  ************************************************************************
 function isvalid = isvalidhandle(handle)
-   if(exist(varname(handle))>0 && ~isempty(ishandle(handle))) 
+   if(exist(varname(handle))>0 && ~isempty(ishandle(handle)))
         if(ishandle(handle)>0)
             if(handle>0.0)
                 isvalid=true;

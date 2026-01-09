@@ -1,0 +1,274 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          echo "Generating changelog..."
+
+          # Get the previous tag
+          PREV_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          # Generate changelog
+          {
+            echo "changelog<<EOF"
+            echo "## What's Changed"
+            echo ""
+            git log ${PREV_TAG}..HEAD --pretty=format:"* %s (%h)" --no-merges | head -50
+            echo ""
+            echo ""
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${{ steps.get_version.outputs.version }}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create Release Archive
+        run: |
+          echo "Creating release archive..."
+
+          # Create clean directory for release
+          mkdir -p release-package
+
+          # Copy essential files
+          cp -r src release-package/
+          cp -r docs release-package/
+          cp -r examples release-package/ 2>/dev/null || true
+          cp README.md release-package/
+          cp LICENSE release-package/ 2>/dev/null || true
+          cp CHANGELOG.md release-package/ 2>/dev/null || true
+          cp SECURITY.md release-package/
+          cp CODE_OF_CONDUCT.md release-package/
+
+          # Create tarball
+          tar -czf system-identification-helicopter-v${{ steps.get_version.outputs.version }}.tar.gz -C release-package .
+
+          # Create zip
+          cd release-package
+          zip -r ../system-identification-helicopter-v${{ steps.get_version.outputs.version }}.zip .
+          cd ..
+
+          echo "✓ Release archives created"
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOL'
+          # System Identification Helicopter Toolkit v${{ steps.get_version.outputs.version }}
+
+          ## Overview
+
+          This release includes improvements to the helicopter system identification toolkit using Invasive Weed Optimization (IWO).
+
+          ${{ steps.changelog.outputs.changelog }}
+
+          ## Installation
+
+          ### Quick Start
+
+          1. Download the archive (`.tar.gz` or `.zip`)
+          2. Extract to your preferred location
+          3. Add to MATLAB path:
+             ```matlab
+             addpath(genpath('path/to/system-identification-helicopter'));
+             ```
+          4. Run the example:
+             ```matlab
+             cd examples
+             run_example
+             ```
+
+          ### Requirements
+
+          - **MATLAB**: R2014b or later
+          - **Required Toolboxes**: None for basic functionality
+          - **Optional Toolboxes**:
+            - Parallel Computing Toolbox (for parallel optimization)
+            - Optimization Toolbox (for comparison studies)
+
+          ## What's Included
+
+          - **Algorithms**: IWO implementation with performance optimizations
+          - **Utilities**: Data loading, validation, visualization, and reporting tools
+          - **Documentation**: Comprehensive guides and API documentation
+          - **Examples**: Sample scripts and configuration files
+
+          ## Key Features
+
+          - ✅ State-space helicopter model identification
+          - ✅ Invasive Weed Optimization algorithm
+          - ✅ Parallel computing support
+          - ✅ Reproducible experiment framework
+          - ✅ Comprehensive visualization and reporting
+          - ✅ Data management with Git LFS support
+          - ✅ Performance profiling tools
+
+          ## Documentation
+
+          - [README](README.md) - Getting started guide
+          - [API Documentation](docs/) - Detailed function reference
+          - [Examples](examples/) - Usage examples
+          - [Performance Guide](docs/PERFORMANCE.md) - Optimization tips
+          - [Data Catalog](docs/DATA_CATALOG.md) - Dataset documentation
+
+          ## Support
+
+          - 📖 [Documentation](https://github.com/${{ github.repository }}/tree/main/docs)
+          - 🐛 [Issue Tracker](https://github.com/${{ github.repository }}/issues)
+          - 💬 [Discussions](https://github.com/${{ github.repository }}/discussions)
+          - 🔒 [Security Policy](SECURITY.md)
+
+          ## Citation
+
+          If you use this toolkit in your research, please cite:
+
+          ```bibtex
+          @software{system_identification_helicopter,
+            title = {System Identification Helicopter Toolkit},
+            version = {${{ steps.get_version.outputs.version }}},
+            year = {2026},
+            url = {https://github.com/${{ github.repository }}}
+          }
+          ```
+
+          ---
+
+          **Checksums**:
+          - See assets below for SHA256 checksums
+          EOL
+
+      - name: Generate Checksums
+        run: |
+          echo "Generating checksums..."
+          sha256sum system-identification-helicopter-v${{ steps.get_version.outputs.version }}.tar.gz > checksums.txt
+          sha256sum system-identification-helicopter-v${{ steps.get_version.outputs.version }}.zip >> checksums.txt
+          cat checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            system-identification-helicopter-v${{ steps.get_version.outputs.version }}.tar.gz
+            system-identification-helicopter-v${{ steps.get_version.outputs.version }}.zip
+            checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Latest Tag
+        run: |
+          git tag -f latest
+          git push -f origin latest
+
+  publish-documentation:
+    name: Publish Documentation
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build Documentation Site
+        run: |
+          echo "Building documentation site..."
+          mkdir -p _site
+
+          # Copy documentation
+          cp -r docs/* _site/
+          cp README.md _site/index.md
+
+          # Create simple index.html
+          cat > _site/index.html << 'EOL'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>System Identification Helicopter - Documentation</title>
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+              h1 { color: #333; }
+              .doc-list { list-style: none; padding: 0; }
+              .doc-list li { margin: 10px 0; }
+              .doc-list a { color: #0066cc; text-decoration: none; }
+              .doc-list a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1>System Identification Helicopter Toolkit</h1>
+            <h2>Documentation</h2>
+            <ul class="doc-list">
+              <li><a href="README.md">Getting Started</a></li>
+              <li><a href="PERFORMANCE.md">Performance Guide</a></li>
+              <li><a href="DATA_CATALOG.md">Data Catalog</a></li>
+              <li><a href="GIT_LFS_SETUP.md">Git LFS Setup</a></li>
+              <li><a href="../SECURITY.md">Security Policy</a></li>
+              <li><a href="../CODE_OF_CONDUCT.md">Code of Conduct</a></li>
+            </ul>
+            <p><a href="https://github.com/${{ github.repository }}">View on GitHub</a></p>
+          </body>
+          </html>
+          EOL
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  notify:
+    name: Notify Release
+    needs: [create-release, publish-documentation]
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Release Success
+        run: |
+          echo "✓ Release v${{ needs.create-release.outputs.version }} published successfully!"
+          echo "✓ Documentation updated"
+          echo "✓ Archives created and uploaded"

@@ -1,4 +1,4 @@
-%{ 
+%{
 A_SimplePatch.m
 
 This shows how to create a simple patch object (a triangle in this case) by
